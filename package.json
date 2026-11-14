@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "scripts": {
+    "start": "node server.mjs",
+    "build:pdfjs": "node scripts/build-pdfjs.mjs"
+  },
+  "dependencies": {
+    "pdfjs-dist": "6.5.438"
+  },
+  "devDependencies": {
+    "esbuild": "0.27.2"
+  }
+}
