@@ -180,6 +180,21 @@
       .bar-pair { display: flex; width: 100%; min-height: 140px; flex: 1; align-items: flex-end; justify-content: center; gap: 4px; }
       .bar { width: min(24px, 38%); min-height: 3px; border-radius: 4px 4px 1px 1px; background: var(--green); transition: height .25s ease; }
       .bar.expense { background: #e6a16c; }
+      .comparison-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 0 19px 2px; }
+      .comparison-value { min-width: 0; padding: 9px 10px; border-radius: 7px; background: #f7f9f7; }
+      .comparison-value span { display: block; overflow: hidden; color: #89928c; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+      .comparison-value strong { display: block; margin-top: 4px; color: #39483f; font-size: 13px; font-weight: 650; }
+      .comparison-value small { display: block; margin-top: 4px; color: #89928c; font-size: 9px; }
+      .comparison-value.change strong { color: #568064; }
+      .comparison-value.change.negative strong { color: #bc7155; }
+      .comparison-select { height: 30px; padding: 0 25px 0 9px; border: 1px solid var(--line); border-radius: 6px; color: #59665e; background: var(--paper); font-size: 10px; }
+      .chart-header-actions { display: flex; align-items: center; gap: 12px; }
+      .comparison-navigation { display: inline-flex; align-items: center; gap: 4px; }
+      .comparison-arrow { display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid var(--line); border-radius: 6px; color: #59665e; background: var(--paper); }
+      .comparison-arrow:hover:not(:disabled) { color: var(--green); background: #f3f7f4; }
+      .comparison-arrow:disabled { opacity: .4; cursor: default; }
+      .comparison-arrow svg { width: 14px; height: 14px; }
+      .comparison-summary[hidden], .comparison-navigation[hidden] { display: none; }
       .chart.empty-chart { align-items: center; justify-content: center; color: #949d97; font-size: 12px; }
       .breakdown { padding: 0 19px 16px; }
       .breakdown-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; margin-top: 13px; font-size: 11px; }
@@ -441,8 +456,20 @@
             <section class="panel">
               <div class="panel-header">
                 <div><h2 class="panel-title" id="chart-title">Inkomsten &amp; uitgaven</h2><p class="panel-note" id="chart-note">Vergelijking van de afgelopen 6 maanden</p></div>
-                <div class="legend" id="chart-legend"><span><i></i>Inkomsten</span><span><i class="legend-orange"></i>Uitgaven</span></div>
+                <div class="chart-header-actions">
+                  <div class="comparison-navigation" id="comparison-navigation">
+                    <button class="comparison-arrow" id="comparison-previous" type="button" aria-label="Vergelijk met eerdere periode" title="Eerdere periode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+                    <select class="comparison-select" id="comparison-period" aria-label="Kies periode voor vergelijking">
+                      <option value="month">Maand</option>
+                      <option value="quarter">Kwartaal</option>
+                      <option value="year" selected>Jaar</option>
+                    </select>
+                    <button class="comparison-arrow" id="comparison-next" type="button" aria-label="Vergelijk met latere periode" title="Latere periode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+                  </div>
+                  <div class="legend" id="chart-legend"><span><i></i>Inkomsten</span><span><i class="legend-orange"></i>Uitgaven</span></div>
+                </div>
               </div>
+              <div class="comparison-summary" id="comparison-summary" aria-live="polite"></div>
               <div class="chart" id="chart" aria-label="Grafiek"></div>
             </section>
             <section class="panel">
@@ -565,6 +592,7 @@
         const categoryColors = ["#6e9b7c", "#d99a69", "#7d9bb2", "#b58baf", "#c5a854", "#8ba6a0"];
         let currentView = "income";
         let currentGroupFilter = "";
+        let comparisonPeriodOffset = 0;
         const sidebar = document.querySelector(".sidebar");
         const app = document.querySelector(".app");
         const sidebarToggle = document.querySelector("#sidebar-toggle");
@@ -834,6 +862,81 @@
             return d.getFullYear() === now.getFullYear();
           });
         };
+        function getPeriodComparison() {
+          const now = new Date();
+          now.setHours(0, 0, 0, 0);
+          const period = $("#comparison-period").value;
+          const monthSpan = period === "month" ? 1 : period === "quarter" ? 3 : 12;
+          const baseMonth = period === "month" ? now.getMonth()
+            : period === "quarter" ? Math.floor(now.getMonth() / 3) * 3
+              : 0;
+          const currentStart = new Date(now.getFullYear(), baseMonth + comparisonPeriodOffset * monthSpan, 1);
+          const previousStart = new Date(currentStart.getFullYear(), currentStart.getMonth() - monthSpan, 1);
+          const currentPeriodEnd = new Date(currentStart.getFullYear(), currentStart.getMonth() + monthSpan, 0);
+          const previousEnd = new Date(previousStart.getFullYear(), previousStart.getMonth() + monthSpan, 0);
+          const isCurrentPeriod = comparisonPeriodOffset === 0;
+          const currentEnd = isCurrentPeriod ? now : currentPeriodEnd;
+          const dateNumber = (date) => Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+          const matchedEnd = new Date(previousEnd);
+          if (isCurrentPeriod) {
+            const elapsedDays = Math.floor((dateNumber(currentEnd) - dateNumber(currentStart)) / 86400000) + 1;
+            matchedEnd.setTime(previousStart.getTime());
+            matchedEnd.setDate(matchedEnd.getDate() + elapsedDays - 1);
+            if (matchedEnd > previousEnd) matchedEnd.setTime(previousEnd.getTime());
+          }
+          const totalForRange = (view, start, end) => sum(data[view].filter((entry) => {
+            if (entry.hidden) return false;
+            const date = parseDate(entry.date);
+            date.setHours(0, 0, 0, 0);
+            return !Number.isNaN(date.getTime()) && date >= start && date <= end;
+          }));
+          const format = (date) => new Intl.DateTimeFormat("nl-NL", { day: "numeric", month: "short", year: "numeric" }).format(date);
+          const periodTitle = (start) => {
+            if (period === "month") return new Intl.DateTimeFormat("nl-NL", { month: "long", year: "numeric" }).format(start);
+            if (period === "quarter") return `K${Math.floor(start.getMonth() / 3) + 1} ${start.getFullYear()}`;
+            return String(start.getFullYear());
+          };
+          return {
+            income: {
+              current: totalForRange("income", currentStart, currentEnd),
+              previous: totalForRange("income", previousStart, matchedEnd),
+            },
+            expenses: {
+              current: totalForRange("expenses", currentStart, currentEnd),
+              previous: totalForRange("expenses", previousStart, matchedEnd),
+            },
+            currentLabel: `${format(currentStart)} t/m ${format(currentEnd)}`,
+            previousLabel: `${format(previousStart)} t/m ${format(matchedEnd)}`,
+            currentPeriodLabel: isCurrentPeriod
+              ? period === "month" ? "Deze maand" : period === "quarter" ? "Dit kwartaal" : "Dit jaar"
+              : periodTitle(currentStart),
+            previousPeriodLabel: isCurrentPeriod
+              ? period === "month" ? "Vorige maand" : period === "quarter" ? "Vorig kwartaal" : "Vorig jaar"
+              : periodTitle(previousStart),
+          };
+        }
+        function renderComparisonSummary() {
+          const comparison = getPeriodComparison();
+          const formatDifference = (current, previous) => {
+            const difference = current - previous;
+            const percentage = previous === 0 ? (current === 0 ? "0%" : "n.v.t.") : `${difference > 0 ? "+" : ""}${(difference / previous * 100).toLocaleString("nl-NL", { maximumFractionDigits: 1 })}%`;
+            return `${difference > 0 ? "+" : difference < 0 ? "−" : ""}${money(Math.abs(difference))} (${percentage})`;
+          };
+          const incomeDifference = comparison.income.current - comparison.income.previous;
+          const expenseDifference = comparison.expenses.current - comparison.expenses.previous;
+          $("#comparison-summary").innerHTML = `
+            <div class="comparison-value change ${incomeDifference < 0 ? "negative" : ""}">
+              <span>Inkomstenverschil · ${escapeHTML(comparison.currentPeriodLabel)} t.o.v. ${escapeHTML(comparison.previousPeriodLabel)}</span>
+              <strong>${formatDifference(comparison.income.current, comparison.income.previous)}</strong>
+              <small>${money(comparison.income.current)} tegenover ${money(comparison.income.previous)}</small>
+            </div>
+            <div class="comparison-value change ${expenseDifference > 0 ? "negative" : ""}">
+              <span>Uitgavenverschil · ${escapeHTML(comparison.currentPeriodLabel)} t.o.v. ${escapeHTML(comparison.previousPeriodLabel)}</span>
+              <strong>${formatDifference(comparison.expenses.current, comparison.expenses.previous)}</strong>
+              <small>${money(comparison.expenses.current)} tegenover ${money(comparison.expenses.previous)}</small>
+            </div>`;
+          $("#comparison-next").disabled = comparisonPeriodOffset >= 0;
+        }
         const sum = (entries) => entries.reduce((total, entry) => total + Number(typeof entry === "number" ? entry : entry.amount || 0), 0);
         const groupTotals = (entries) => entries.reduce((totals, entry) => {
           const key = entry.group || "Overig";
@@ -1086,7 +1189,10 @@
           $("#breakdown-title").textContent = config.breakdownTitle;
           $("#table-title").textContent = config.tableTitle;
           $("#table-note").textContent = config.tableNote;
-          $("#chart-legend").hidden = currentView !== "income" && currentView !== "expenses";
+          const comparingCashflow = currentView === "income" || currentView === "expenses";
+          $("#chart-legend").hidden = !comparingCashflow;
+          $("#comparison-navigation").hidden = !comparingCashflow;
+          $("#comparison-summary").hidden = !comparingCashflow;
           $("#period-select").disabled = currentView === "investments" || currentView === "loans";
           $("#period-select").style.opacity = $("#period-select").disabled ? ".55" : "1";
           $("#demo-banner").hidden = !data.demo;
@@ -1204,6 +1310,7 @@
         function renderChart() {
           const chart = $("#chart");
           if (currentView === "income" || currentView === "expenses") {
+            renderComparisonSummary();
             const months = [];
             for (let i = 5; i >= 0; i--) {
               const date = new Date();
@@ -1576,6 +1683,18 @@
           renderTable();
         });
         $("#period-select").addEventListener("change", () => { renderMetrics(); renderBreakdown(); renderTable(); });
+        $("#comparison-period").addEventListener("change", () => {
+          comparisonPeriodOffset = 0;
+          renderChart();
+        });
+        $("#comparison-previous").addEventListener("click", () => {
+          comparisonPeriodOffset -= 1;
+          renderChart();
+        });
+        $("#comparison-next").addEventListener("click", () => {
+          comparisonPeriodOffset = Math.min(0, comparisonPeriodOffset + 1);
+          renderChart();
+        });
         $("#search-input").addEventListener("input", renderTable);
         $("#clear-search").addEventListener("click", () => {
           $("#search-input").value = "";
