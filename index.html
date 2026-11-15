@@ -88,6 +88,7 @@
       .nav-item:hover { color: #fff; background: #2a4b40; }
       .nav-item.active { color: #fff; background: #355a4d; }
       .nav-item svg { width: 18px; height: 18px; flex: 0 0 18px; }
+      .nav-item .beta-badge { margin-left: auto; padding: 3px 6px; border: 1px solid #799389; border-radius: 6px; color: #d3e2d9; font-size: 9px; font-weight: 650; line-height: 1; }
       .sidebar-bottom { margin-top: auto; }
       .privacy-card { padding: 15px 14px; border: 1px solid #3b584e; border-radius: 10px; background: #29473d; }
       .privacy-title { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; color: #edf3ee; font-size: 12px; font-weight: 650; }
@@ -326,6 +327,40 @@
       .settings-rename:hover { color: var(--green); background: #edf3ee; }
       .settings-remove svg { width: 13px; height: 13px; }
       .settings-error { min-height: 16px; margin: 10px 0 0; color: #b5574f; font-size: 10px; }
+      .planning-mode .actions { display: none; }
+      .planning-dashboard[hidden] { display: none; }
+      .planning-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 15px; }
+      .planning-panel { padding: 18px; }
+      .planning-panel h2 { margin: 0 0 5px; }
+      .planning-list { display: grid; gap: 8px; margin: 15px 0; }
+      .planning-item { min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 7px; }
+      .planning-item-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+      .planning-item-title { min-width: 0; overflow-wrap: anywhere; font-size: 12px; font-weight: 650; }
+      .planning-item-meta { margin-top: 6px; color: var(--muted); font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
+      .planning-item-text { margin-top: 6px; color: var(--muted); font-size: 11px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+      .planning-item-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+      .planning-item-actions button, .planning-form button { height: 32px; }
+      .planning-form { display: grid; gap: 9px; padding-top: 12px; border-top: 1px solid var(--line); }
+      .planning-form.before-list { margin-top: 14px; padding-top: 0; padding-bottom: 12px; border-top: 0; border-bottom: 1px solid var(--line); }
+      .planning-form label { display: grid; gap: 4px; color: var(--muted); font-size: 10px; }
+      .planning-form input, .planning-form select, .planning-form textarea { width: 100%; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: var(--paper); font: inherit; font-size: 11px; }
+      .planning-filter { display: grid; gap: 4px; margin-top: 14px; color: var(--muted); font-size: 10px; }
+      .planning-filter select { width: 100%; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: var(--paper); font: inherit; font-size: 11px; }
+      .planning-form textarea { min-height: 70px; resize: vertical; }
+      .planning-form-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+      .planning-progress { height: 5px; margin-top: 8px; overflow: hidden; border-radius: 5px; background: var(--line); }
+      .planning-progress span { display: block; height: 100%; background: var(--green); }
+      .planning-empty { color: var(--muted); font-size: 11px; }
+      .planning-table-wrap { overflow-x: auto; }
+      .planning-table { min-width: 240px; table-layout: auto; }
+      .planning-table th, .planning-table td { padding: 7px 4px; white-space: normal; vertical-align: top; }
+      .planning-table th:first-child, .planning-table td:first-child { width: 30px; text-align: center; }
+      .planning-table th:last-child, .planning-table td:last-child { width: 64px; text-align: right; white-space: nowrap; }
+      .planning-table input { width: 14px; height: 14px; margin: 0; accent-color: var(--green); }
+      .planning-table .planning-item-meta { margin-top: 3px; }
+      .planning-table .completed-task .planning-item-title { color: var(--muted); text-decoration: line-through; }
+      .planning-table .icon-button { display: inline-grid; vertical-align: middle; }
+      .planning-table .icon-button svg { width: 14px; height: 14px; }
       .toast { position: fixed; right: 24px; bottom: 22px; z-index: 20; padding: 11px 15px; border-radius: 7px; color: #fff; background: #29493d; box-shadow: 0 6px 20px #1c30263b; font-size: 12px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: .2s ease; }
       .toast.visible { opacity: 1; transform: translateY(0); }
       .mobile-menu { display: none; }
@@ -482,11 +517,14 @@
           <button class="nav-item" data-view="expenses">
             <svg viewBox="0 0 24 24" aria-hidden="true"><text x="9" y="18" text-anchor="middle" fill="currentColor" font-family="system-ui, sans-serif" font-size="17">€</text><path d="M13 9h8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>Uitgaven</span>
           </button>
-          <button class="nav-item" data-view="investments">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17.5 8.5 12l4 4L21 7.5"/><path d="M15 7.5h6v6"/></svg><span>Investeringen</span>
+          <button class="nav-item" data-view="investments" aria-label="Investeringen (bèta)" title="Investeringen (bèta)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17.5 8.5 12l4 4L21 7.5"/><path d="M15 7.5h6v6"/></svg><span>Investeringen</span><span class="beta-badge" aria-hidden="true">Bèta</span>
           </button>
-          <button class="nav-item" data-view="loans">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/></svg><span>Leningen</span>
+          <button class="nav-item" data-view="loans" aria-label="Leningen (bèta)" title="Leningen (bèta)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/></svg><span>Leningen</span><span class="beta-badge" aria-hidden="true">Bèta</span>
+          </button>
+          <button class="nav-item" data-view="planning" aria-label="Doelstellingen en taken" title="Doelstellingen en taken">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m7 9 1.5 1.5L11 8m2 2h4M7 15h4m2 0h4"/></svg><span>Doelen &amp; taken</span>
           </button>
           <button class="nav-item" data-view="settings">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .9v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.9l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.9-3h-.2a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 .9-3l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.9v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3 .9l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .9 3h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0-.9 3Z"/></svg><span>Instellingen</span>
@@ -585,7 +623,7 @@
                 <button class="group-filter" id="clear-tag-filter" type="button" aria-label="Tagfilter wissen" hidden></button>
                 <label class="date-filter">Vanaf<input id="date-from" type="date" aria-label="Datum vanaf" /></label>
                 <label class="date-filter">Tot en met<input id="date-to" type="date" aria-label="Datum tot en met" /></label>
-                <label class="hidden-toggle"><input id="show-hidden" type="checkbox" checked />Toon verborgen bedragen</label>
+                <label class="hidden-toggle"><input id="show-hidden" type="checkbox" />Toon verborgen bedragen</label>
               </div>
             </div>
             <div class="bulk-edit" id="bulk-edit" hidden>
@@ -606,6 +644,43 @@
             <div class="table-footer" id="table-footer"><span id="table-count"></span><span class="table-total"><span>Totaal</span><strong id="table-total"></strong><span class="table-total-note" id="table-total-note"></span></span></div>
           </section>
           </div>
+          <section class="planning-dashboard" id="planning-dashboard" aria-label="Doelstellingen, taken en opmerkingen" hidden>
+            <div class="planning-grid">
+              <section class="panel planning-panel">
+                <h2 class="panel-title">Doelstellingen</h2><p class="panel-note">Voortgang op basis van gekoppelde taken.</p>
+                <form class="planning-form before-list" id="goal-form">
+                  <input name="id" type="hidden" />
+                  <label>Beknopte titel<input name="title" maxlength="160" required /></label>
+                  <label>Beschrijving (optioneel)<textarea name="description" maxlength="4000"></textarea></label>
+                  <label>Deadline (optioneel)<input name="dueDate" type="date" /></label>
+                  <div class="planning-form-actions"><button class="button-primary" type="submit">Doelstelling opslaan</button><button class="button-secondary planning-cancel" type="button" hidden>Annuleren</button></div>
+                </form>
+                <div class="planning-list" id="goals-list"></div>
+              </section>
+              <section class="panel planning-panel">
+                <h2 class="panel-title">Taken</h2><p class="panel-note">Koppel eventueel een taak aan een doelstelling.</p>
+                <form class="planning-form before-list" id="task-form">
+                  <input name="id" type="hidden" />
+                  <label>Taak<input name="title" maxlength="160" required /></label>
+                  <label>Doelstelling (optioneel)<select name="goalId"></select></label>
+                  <label>Deadline (optioneel)<input name="dueDate" type="date" /></label>
+                  <div class="planning-form-actions"><button class="button-primary" type="submit">Taak opslaan</button><button class="button-secondary planning-cancel" type="button" hidden>Annuleren</button></div>
+                </form>
+                <label class="planning-filter">Filter taken op doelstelling<select id="task-goal-filter"><option value="">Alle taken</option></select></label>
+                <div class="planning-list" id="tasks-list"></div>
+              </section>
+              <section class="panel planning-panel">
+                <h2 class="panel-title">Opmerkingen</h2><p class="panel-note">Los of gekoppeld aan een doelstelling of taak.</p>
+                <div class="planning-list" id="notes-list"></div>
+                <form class="planning-form" id="note-form">
+                  <input name="id" type="hidden" />
+                  <label>Opmerking<textarea name="text" maxlength="4000" required></textarea></label>
+                  <label>Koppelen aan (optioneel)<select name="link"></select></label>
+                  <div class="planning-form-actions"><button class="button-primary" type="submit">Opmerking opslaan</button><button class="button-secondary planning-cancel" type="button" hidden>Annuleren</button></div>
+                </form>
+              </section>
+            </div>
+          </section>
           <section class="panel settings-panel" id="settings-panel" hidden>
             <p class="settings-intro">Je gegevens worden lokaal bewaard in <code>data/finance.json</code>. Een back-up wordt met datum en tijd opgeslagen in de map <code>backups/</code>. Beheer hier je categorieën en labels; verwijderen wist geen bestaande transacties.</p>
             <div class="settings-project-actions">
@@ -790,6 +865,9 @@
           ],
           groupOptions: defaultGroupOptions(),
           importedTransactionKeys: [],
+          goals: [],
+          tasks: [],
+          notes: [],
           demo: true,
         });
         const normalizeData = (parsed) => {
@@ -800,6 +878,27 @@
             parsed[view] = parsed[view].map((entry) => entry && typeof entry === "object"
               ? { ...entry, tags: parseTags(Array.isArray(entry.tags) ? entry.tags.join(", ") : entry.tags) }
               : entry);
+          }
+          for (const key of ["goals", "tasks", "notes"]) {
+            if (parsed[key] === undefined) parsed[key] = [];
+            if (!Array.isArray(parsed[key])) throw new Error(`Ongeldige ${key} in het projectbestand.`);
+            const ids = new Set();
+            for (const item of parsed[key]) {
+              const valid = item && typeof item === "object" && typeof item.id === "string" && item.id
+                && !ids.has(item.id)
+                && (key === "notes"
+                  ? typeof item.text === "string" && item.text.trim() && typeof item.linkType === "string" && typeof item.linkId === "string"
+                  : typeof item.title === "string" && item.title.trim() && typeof item.dueDate === "string"
+                    && (key !== "goals" || item.description === undefined || typeof item.description === "string")
+                    && (key !== "tasks" || (typeof item.done === "boolean" && typeof item.goalId === "string")));
+              if (!valid) throw new Error(`Ongeldige gegevens bij ${key} in het projectbestand.`);
+              ids.add(item.id);
+            }
+          }
+          if (parsed.tasks.some((task) => task.goalId && !parsed.goals.some((goal) => goal.id === task.goalId))
+            || parsed.notes.some((note) => !["", "goal", "task"].includes(note.linkType)
+              || (note.linkType === "" ? note.linkId !== "" : !parsed[note.linkType === "goal" ? "goals" : "tasks"].some((item) => item.id === note.linkId)))) {
+            throw new Error("Het projectbestand bevat ongeldige koppelingen tussen doelstellingen, taken en opmerkingen.");
           }
           if (!Array.isArray(parsed.importedTransactionKeys)) parsed.importedTransactionKeys = [];
           parsed.groupOptions = Object.fromEntries(
@@ -1307,14 +1406,24 @@
           document.querySelectorAll(".nav-item").forEach((item) => item.removeAttribute("aria-current"));
           nav.setAttribute("aria-current", "page");
           const settingsMode = currentView === "settings";
+          const planningMode = currentView === "planning";
           $(".content").classList.toggle("settings-mode", settingsMode);
-          $("#dashboard-sections").hidden = settingsMode;
+          $(".content").classList.toggle("planning-mode", planningMode);
+          $("#dashboard-sections").hidden = settingsMode || planningMode;
           $("#settings-panel").hidden = !settingsMode;
+          $("#planning-dashboard").hidden = !planningMode;
           if (settingsMode) {
             $("#eyebrow").textContent = "Beheer je voorkeuren";
             $("#page-title").textContent = "Instellingen";
             $("#page-subtitle").textContent = "Pas je categorieën en labels aan.";
             renderSettings();
+            return;
+          }
+          if (planningMode) {
+            $("#eyebrow").textContent = "Maak je plannen concreet";
+            $("#page-title").textContent = "Doelen & taken";
+            $("#page-subtitle").textContent = "Noteer je doelstellingen, taken en opmerkingen en volg je voortgang.";
+            renderPlanning();
             return;
           }
           const config = configs[currentView];
@@ -1339,6 +1448,145 @@
           renderBreakdown();
           renderTable();
         }
+
+        function renderPlanning() {
+          const options = (items) => items.map((item) => `<option value="${escapeHTML(item.id)}">${escapeHTML(item.title)}</option>`).join("");
+          const goalSelect = $("#task-form select[name=goalId]");
+          const taskFilter = $("#task-goal-filter");
+          const linkSelect = $("#note-form select[name=link]");
+          const selectedGoal = goalSelect.value;
+          const selectedTaskFilter = taskFilter.value;
+          const selectedLink = linkSelect.value;
+          goalSelect.innerHTML = `<option value="">Geen doelstelling</option>${options(data.goals)}`;
+          if (data.goals.some((goal) => goal.id === selectedGoal)) goalSelect.value = selectedGoal;
+          taskFilter.innerHTML = `<option value="">Alle taken</option><option value="unlinked">Zonder doelstelling</option>${data.goals.map((goal) => `<option value="goal:${escapeHTML(goal.id)}">${escapeHTML(goal.title)}</option>`).join("")}`;
+          if ([...taskFilter.options].some((option) => option.value === selectedTaskFilter)) taskFilter.value = selectedTaskFilter;
+          linkSelect.innerHTML = `<option value="">Geen koppeling</option>${data.goals.map((goal) => `<option value="goal:${escapeHTML(goal.id)}">Doelstelling: ${escapeHTML(goal.title)}</option>`).join("")}${data.tasks.map((task) => `<option value="task:${escapeHTML(task.id)}">Taak: ${escapeHTML(task.title)}</option>`).join("")}`;
+          if ([...linkSelect.options].some((option) => option.value === selectedLink)) linkSelect.value = selectedLink;
+          const deadline = (date) => date ? `Deadline: ${escapeHTML(dateString(date))}` : "Geen deadline";
+          const actions = (type, id) => `<div class="planning-item-actions"><button class="button-secondary" type="button" data-planning-action="edit" data-type="${type}" data-id="${escapeHTML(id)}">Bewerken</button><button class="button-secondary" type="button" data-planning-action="delete" data-type="${type}" data-id="${escapeHTML(id)}">Verwijderen</button></div>`;
+          $("#goals-list").innerHTML = data.goals.length ? data.goals.map((goal) => {
+            const tasks = data.tasks.filter((task) => task.goalId === goal.id);
+            const done = tasks.filter((task) => task.done).length;
+            const percent = tasks.length ? Math.round(done / tasks.length * 100) : 0;
+            return `<article class="planning-item"><div class="planning-item-title">${escapeHTML(goal.title)}</div>${goal.description ? `<div class="planning-item-text">${escapeHTML(goal.description)}</div>` : ""}<div class="planning-item-meta">${deadline(goal.dueDate)} · ${tasks.length ? `${done} van ${tasks.length} taken afgerond (${percent}%)` : "Nog geen gekoppelde taken"}</div>${tasks.length ? `<div class="planning-progress" role="progressbar" aria-label="Voortgang ${escapeHTML(goal.title)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><span style="width:${percent}%"></span></div>` : ""}${actions("goal", goal.id)}</article>`;
+          }).join("") : '<p class="planning-empty">Nog geen doelstellingen.</p>';
+          const filteredTasks = data.tasks.filter((task) => !taskFilter.value || (taskFilter.value === "unlinked" ? !task.goalId : `goal:${task.goalId}` === taskFilter.value))
+            .sort((a, b) => Number(a.done) - Number(b.done));
+          $("#tasks-list").innerHTML = filteredTasks.length ? `<div class="planning-table-wrap"><table class="planning-table"><thead><tr><th scope="col">Klaar</th><th scope="col">Taak</th><th scope="col">Acties</th></tr></thead><tbody>${filteredTasks.map((task) => {
+            const goal = data.goals.find((item) => item.id === task.goalId);
+            return `<tr class="${task.done ? "completed-task" : ""}"><td><input type="checkbox" data-planning-action="done" data-id="${escapeHTML(task.id)}" ${task.done ? "checked" : ""} aria-label="${escapeHTML(task.title)} afgerond" /></td><td><div class="planning-item-title">${escapeHTML(task.title)}</div><div class="planning-item-meta">${deadline(task.dueDate)}${goal ? ` · Doelstelling: ${escapeHTML(goal.title)}` : ""}</div></td><td><button class="icon-button" type="button" data-planning-action="edit" data-type="task" data-id="${escapeHTML(task.id)}" aria-label="Bewerk taak ${escapeHTML(task.title)}" title="Bewerken"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 20 4-.8L19 8.2 15.8 5 4.8 16 4 20Z"/><path d="m14.5 6.3 3.2 3.2"/></svg></button><button class="icon-button delete" type="button" data-planning-action="delete" data-type="task" data-id="${escapeHTML(task.id)}" aria-label="Verwijder taak ${escapeHTML(task.title)}" title="Verwijderen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button></td></tr>`;
+          }).join("")}</tbody></table></div>` : `<p class="planning-empty">${taskFilter.value ? "Geen taken voor deze selectie." : "Nog geen taken."}</p>`;
+          $("#notes-list").innerHTML = data.notes.length ? data.notes.map((note) => {
+            const linked = note.linkType ? data[note.linkType === "goal" ? "goals" : "tasks"].find((item) => item.id === note.linkId) : null;
+            return `<article class="planning-item"><div class="planning-item-text">${escapeHTML(note.text)}</div>${linked ? `<div class="planning-item-meta">${note.linkType === "goal" ? "Doelstelling" : "Taak"}: ${escapeHTML(linked.title)}</div>` : ""}${actions("note", note.id)}</article>`;
+          }).join("") : '<p class="planning-empty">Nog geen opmerkingen.</p>';
+        }
+
+        function resetPlanningForm(form) {
+          form.reset();
+          form.elements.id.value = "";
+          form.querySelector(".planning-cancel").hidden = true;
+        }
+
+        async function savePlanning(nextData) {
+          const dashboard = $("#planning-dashboard");
+          dashboard.inert = true;
+          const previousData = data;
+          data = nextData;
+          const saved = await persist();
+          if (!saved) data = previousData;
+          dashboard.inert = false;
+          return saved;
+        }
+
+        $("#planning-dashboard").addEventListener("submit", async (event) => {
+          const form = event.target.closest("form.planning-form");
+          if (!form) return;
+          event.preventDefault();
+          const type = form.getAttribute("id").replace("-form", "");
+          const key = { goal: "goals", task: "tasks", note: "notes" }[type];
+          const values = new FormData(form);
+          const id = String(values.get("id") || "");
+          const existing = data[key].find((item) => item.id === id);
+          if (id && !existing) {
+            showToast("Dit item bestaat niet meer. Annuleer de bewerking en probeer opnieuw.");
+            return;
+          }
+          const content = String(values.get(type === "note" ? "text" : "title") || "").trim();
+          if (!content) {
+            showToast(type === "note" ? "Vul een opmerking in." : "Vul een naam in.");
+            return;
+          }
+          const link = String(values.get("link") || "");
+          const separator = link.indexOf(":");
+          const item = type === "note"
+            ? { ...existing, id: id || crypto.randomUUID(), text: content, linkType: separator < 0 ? "" : link.slice(0, separator), linkId: separator < 0 ? "" : link.slice(separator + 1) }
+            : { ...existing, id: id || crypto.randomUUID(), title: content, dueDate: String(values.get("dueDate") || ""), ...(type === "goal" ? { description: String(values.get("description") || "").trim() } : { goalId: String(values.get("goalId") || ""), done: existing?.done ?? false }) };
+          const nextItems = existing ? data[key].map((entry) => entry.id === id ? item : entry) : [...data[key], item];
+          if (!await savePlanning({ ...data, [key]: nextItems })) return;
+          resetPlanningForm(form);
+          renderPlanning();
+          showToast("Opgeslagen.");
+        });
+
+        $("#planning-dashboard").addEventListener("change", async (event) => {
+          if (event.target.id === "task-goal-filter") {
+            renderPlanning();
+            return;
+          }
+          const checkbox = event.target.closest('input[data-planning-action="done"]');
+          if (!checkbox) return;
+          const nextTasks = data.tasks.map((task) => task.id === checkbox.dataset.id ? { ...task, done: checkbox.checked } : task);
+          if (!await savePlanning({ ...data, tasks: nextTasks })) {
+            checkbox.checked = !checkbox.checked;
+            return;
+          }
+          renderPlanning();
+        });
+
+        $("#planning-dashboard").addEventListener("click", async (event) => {
+          const cancel = event.target.closest(".planning-cancel");
+          if (cancel) {
+            resetPlanningForm(cancel.closest("form"));
+            return;
+          }
+          const button = event.target.closest("button[data-planning-action]");
+          if (!button) return;
+          const type = button.dataset.type;
+          const key = { goal: "goals", task: "tasks", note: "notes" }[type];
+          const item = data[key].find((entry) => entry.id === button.dataset.id);
+          if (!item) return;
+          const form = $(`#${type}-form`);
+          if (button.dataset.planningAction === "edit") {
+            form.elements.id.value = item.id;
+            if (type === "note") {
+              form.elements.text.value = item.text;
+              form.elements.link.value = item.linkType ? `${item.linkType}:${item.linkId}` : "";
+            } else {
+              form.elements.title.value = item.title;
+              form.elements.dueDate.value = item.dueDate;
+              if (type === "goal") form.elements.description.value = item.description || "";
+              if (type === "task") form.elements.goalId.value = item.goalId;
+            }
+            form.querySelector(".planning-cancel").hidden = false;
+            form.querySelector(type === "note" ? "textarea" : 'input[name="title"]').focus();
+            return;
+          }
+          const label = type === "goal" ? "doelstelling" : type === "task" ? "taak" : "opmerking";
+          const consequence = type === "goal" ? " Gekoppelde taken en opmerkingen blijven bestaan zonder deze koppeling." : type === "task" ? " Gekoppelde opmerkingen blijven bestaan zonder deze koppeling." : "";
+          if (!window.confirm(`Deze ${label} verwijderen?${consequence}`)) return;
+          const next = {
+            ...data,
+            [key]: data[key].filter((entry) => entry.id !== item.id),
+            ...(type === "goal" ? { tasks: data.tasks.map((task) => task.goalId === item.id ? { ...task, goalId: "" } : task) } : {}),
+            ...(type !== "note" ? { notes: data.notes.map((note) => note.linkType === type && note.linkId === item.id ? { ...note, linkType: "", linkId: "" } : note) } : {}),
+          };
+          if (!await savePlanning(next)) return;
+          if (form.elements.id.value === item.id) resetPlanningForm(form);
+          renderPlanning();
+          showToast(`${label[0].toLocaleUpperCase("nl") + label.slice(1)} verwijderd.`);
+        });
 
         const groupOptionsFor = (view, currentValue = "") => {
           const available = data.groupOptions?.[view] || configs[view].groupOptions;
@@ -2117,7 +2365,9 @@
             $("#date-from").value = "";
             $("#date-to").value = "";
             $("#period-select").value = "all";
-            $("#show-hidden").checked = true;
+            $("#show-hidden").checked = false;
+            $("#task-goal-filter").value = "";
+            document.querySelectorAll(".planning-form").forEach(resetPlanningForm);
             updatePage();
             showToast(`Projectbestand geladen. Vorige gegevens veiliggesteld in ${backupPath}.`);
           } catch (error) {
