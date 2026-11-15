@@ -97,6 +97,9 @@
       .main { width: calc(100% - 244px); min-height: 100vh; margin-left: 244px; transition: width .2s ease, margin-left .2s ease; }
       .app.sidebar-collapsed .main { width: calc(100% - 74px); margin-left: 74px; }
       .topbar { display: flex; height: 70px; align-items: center; justify-content: flex-end; gap: 15px; padding: 0 5.2%; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.72); }
+      .theme-toggle { display: grid; width: 38px; flex: 0 0 38px; place-items: center; padding: 0; }
+      .theme-toggle svg { width: 16px; height: 16px; }
+      .theme-toggle .sun-icon { display: none; }
       .local-status { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; }
       .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #64a47c; box-shadow: 0 0 0 3px #e9f3ec; }
       .status-dot.offline { background: #bb6b55; box-shadow: 0 0 0 3px #f7eae6; }
@@ -209,18 +212,18 @@
       .no-breakdown { padding: 20px 0; color: #969f99; font-size: 11px; }
 
       .table-panel { margin-top: 0; }
-      .table-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px 19px; border-bottom: 1px solid #eff1ee; }
+      .table-toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; padding: 16px 19px; border-bottom: 1px solid #eff1ee; }
       .table-toolbar .panel-title { font-size: 16px; }
-      .table-filters { display: flex; min-width: 0; flex: 1; align-items: center; justify-content: flex-end; gap: 9px; }
+      .table-filters { display: flex; min-width: 0; flex: 1; align-items: flex-end; justify-content: flex-end; gap: 9px; }
       .table-filters .search-input { width: auto; min-width: 130px; flex: 1 1 180px; }
-      .group-filter { flex: 0 0 auto; padding: 8px 10px; border: 1px solid #dce8df; border-radius: 7px; color: #42634f; background: #eef5ef; font-size: 10px; white-space: nowrap; }
+      .group-filter { height: 39px; flex: 0 0 auto; padding: 0 10px; border: 1px solid #dce8df; border-radius: 7px; color: #42634f; background: #eef5ef; font-size: 10px; white-space: nowrap; }
       .group-filter:hover { background: #e4efe6; }
       .group-filter[hidden] { display: none; }
       .date-filter { display: flex; min-width: 0; flex-direction: column; gap: 4px; color: #89928c; font-size: 9px; }
       .date-filter input { width: 132px; min-width: 0; height: 39px; padding: 0 8px; border: 1px solid var(--line); border-radius: 7px; outline: none; color: #4d5953; background: var(--paper); font-size: 11px; }
       .date-filter input:focus { border-color: #87a795; box-shadow: 0 0 0 3px #e8f0ea; }
       .date-filter input[aria-invalid="true"] { border-color: var(--red); }
-      .hidden-toggle { display: flex; flex: 0 0 auto; align-items: center; gap: 7px; color: #657069; font-size: 10px; white-space: nowrap; cursor: pointer; }
+      .hidden-toggle { display: flex; height: 39px; flex: 0 0 auto; align-items: center; gap: 7px; color: #657069; font-size: 10px; white-space: nowrap; cursor: pointer; }
       .hidden-toggle input { width: 14px; height: 14px; margin: 0; accent-color: var(--green); }
       .bulk-edit { display: flex; align-items: center; justify-content: flex-end; gap: 9px; padding: 11px 19px; border-bottom: 1px solid #eff1ee; background: #f9fbf9; }
       .bulk-edit[hidden] { display: none; }
@@ -247,6 +250,8 @@
       .item-tag { padding: 3px 7px; border: 0; border-radius: 10px; color: #60766a; background: #edf3ee; font-size: 9px; line-height: 1.2; }
       .item-tag:hover, .item-tag[aria-pressed="true"] { color: #355a45; background: #dcebe0; }
       .tag-filter[hidden] { display: none; }
+      .category-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; white-space: normal; }
+      .category-cell > .tag-filter { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .field-hint { margin: 4px 0 0; color: #89928c; font-size: 9px; line-height: 1.4; }
       .item-note { margin-top: 5px; color: #657069; font-size: 10px; line-height: 1.45; overflow-wrap: anywhere; white-space: pre-wrap; }
       .tag-filter { border: 0; font: inherit; cursor: pointer; }
@@ -355,7 +360,7 @@
         .chart { min-height: 175px; }
         .bar-pair { min-height: 125px; }
         .table-toolbar { align-items: flex-start; flex-direction: column; }
-        .table-filters { width: 100%; flex-wrap: wrap; justify-content: flex-start; }
+        .table-filters { width: 100%; flex-wrap: wrap; align-items: flex-end; justify-content: flex-start; }
         .table-filters .search-field { width: 100%; flex: 1 0 100%; }
         .date-filter { flex: 1 1 120px; }
         .date-filter input { width: 100%; }
@@ -378,6 +383,79 @@
         .demo-banner { align-items: flex-start; }
         th, td { padding-right: 13px; padding-left: 13px; }
       }
+      :root[data-theme="dark"] {
+        color-scheme: dark;
+        --ink: #e6ece8;
+        --muted: #a4b0a9;
+        --line: #39453e;
+        --paper: #232c27;
+        --canvas: #171d19;
+        --green: #83b895;
+        --green-dark: #629b76;
+        --green-soft: #2b4033;
+        --orange-soft: #423226;
+        --blue-soft: #293943;
+        --sidebar: #192b24;
+        --red: #df8c81;
+      }
+      :root[data-theme="dark"] body { color: var(--ink); background: var(--canvas); }
+      :root[data-theme="dark"] .topbar { background: rgba(25, 33, 28, .94); }
+      :root[data-theme="dark"] .avatar { border-color: var(--line); color: var(--green); background: var(--green-soft); }
+      :root[data-theme="dark"] .brand-mark { color: var(--sidebar); background: #b6d2bd; }
+      :root[data-theme="dark"] .metric-card, :root[data-theme="dark"] .panel { border-color: #354139; box-shadow: 0 2px 8px rgba(0, 0, 0, .14); }
+      :root[data-theme="dark"] .metric-head, :root[data-theme="dark"] .panel-note, :root[data-theme="dark"] .chart-month,
+      :root[data-theme="dark"] .item-sub, :root[data-theme="dark"] .table-footer, :root[data-theme="dark"] .table-total-note { color: #a0ada5; }
+      :root[data-theme="dark"] .metric-icon.orange { color: #e3a06f; }
+      :root[data-theme="dark"] .metric-icon.blue { color: #91b4cc; }
+      :root[data-theme="dark"] .metric-icon.red { color: #e1968b; background: #412c2a; }
+      :root[data-theme="dark"] .metric-foot.positive, :root[data-theme="dark"] .comparison-value.change strong { color: #8bc59b; }
+      :root[data-theme="dark"] .metric-foot.negative, :root[data-theme="dark"] .comparison-value.change.negative strong { color: #e79a89; }
+      :root[data-theme="dark"] .comparison-value, :root[data-theme="dark"] .settings-option { color: var(--ink); background: #2b3530; }
+      :root[data-theme="dark"] .comparison-value strong, :root[data-theme="dark"] .breakdown-value { color: var(--ink); }
+      :root[data-theme="dark"] .legend, :root[data-theme="dark"] .breakdown-name, :root[data-theme="dark"] .table-total { color: #b2beb6; }
+      :root[data-theme="dark"] .progress { background: #36413a; }
+      :root[data-theme="dark"] .table-toolbar, :root[data-theme="dark"] .bulk-edit { border-color: #354139; background: #202923; }
+      :root[data-theme="dark"] .bulk-edit select, :root[data-theme="dark"] .table-filters input,
+      :root[data-theme="dark"] .period-select, :root[data-theme="dark"] .comparison-select,
+      :root[data-theme="dark"] .button-secondary, :root[data-theme="dark"] .settings-project-save input {
+        border-color: var(--line);
+        color: var(--ink);
+        background: #252f29;
+      }
+      :root[data-theme="dark"] .button-secondary:hover, :root[data-theme="dark"] .comparison-arrow:hover:not(:disabled) { background: #303c34; }
+      :root[data-theme="dark"] .group-filter { border-color: #42584a; color: #b4d2bc; background: #2b4033; }
+      :root[data-theme="dark"] .group-filter:hover { background: #354d3d; }
+      :root[data-theme="dark"] thead { color: #aab7af; background: #202923; }
+      :root[data-theme="dark"] td { border-color: #303a34; color: #b8c2bc; }
+      :root[data-theme="dark"] tbody tr:hover { background: #29332d; }
+      :root[data-theme="dark"] .item-main, :root[data-theme="dark"] .amount { color: #e4ebe6; }
+      .hidden-row .item-main { text-decoration: line-through; text-decoration-color: var(--muted); text-decoration-thickness: 1px; }
+      :root[data-theme="dark"] .item-tag { color: #c1d9c8; background: #344b3b; }
+      :root[data-theme="dark"] .item-tag:hover, :root[data-theme="dark"] .item-tag[aria-pressed="true"] { color: #e2f2e6; background: #45634d; }
+      :root[data-theme="dark"] .item-note { color: #b6c1ba; }
+      :root[data-theme="dark"] .icon-button { color: #a3b0a8; }
+      :root[data-theme="dark"] .icon-button:hover { color: #d0e6d6; background: #304337; }
+      :root[data-theme="dark"] .hidden-row { background: #242a25; }
+      :root[data-theme="dark"] .empty-row strong { color: var(--ink); }
+      :root[data-theme="dark"] .table-footer { border-color: #354139; }
+      :root[data-theme="dark"] .table-total strong { color: var(--ink); }
+      :root[data-theme="dark"] .modal { background: var(--paper); }
+      :root[data-theme="dark"] .modal-header { border-color: var(--line); }
+      :root[data-theme="dark"] .field label { color: #bec9c2; }
+      :root[data-theme="dark"] .field input, :root[data-theme="dark"] .field select, :root[data-theme="dark"] .field textarea {
+        border-color: var(--line);
+        color: var(--ink);
+        background: #1b241f;
+      }
+      :root[data-theme="dark"] .field input::placeholder, :root[data-theme="dark"] .field textarea::placeholder { color: #87958c; }
+      :root[data-theme="dark"] .close-button { color: #b1bdb5; }
+      :root[data-theme="dark"] .close-button:hover { background: #303b34; }
+      :root[data-theme="dark"] .demo-banner { border-color: #554c35; color: #e0d39d; background: #353122; }
+      :root[data-theme="dark"] .demo-banner button { color: #e0d39d; }
+      :root[data-theme="dark"] .import-notice { border-color: #3b5745; color: #b9d6c1; background: #263a2d; }
+      :root[data-theme="dark"] .tag-filter { filter: brightness(1.35); }
+      :root[data-theme="dark"] .theme-toggle .moon-icon { display: none; }
+      :root[data-theme="dark"] .theme-toggle .sun-icon { display: block; }
     </style>
   </head>
   <body>
@@ -422,6 +500,10 @@
       <main class="main">
         <header class="topbar">
           <div class="local-status" id="storage-status"><span class="status-dot offline"></span><span id="storage-label">Verbinden met projectbestand…</span></div>
+          <button class="button-secondary theme-toggle" id="theme-toggle" type="button" aria-label="Donkere modus inschakelen" title="Donkere modus inschakelen" aria-pressed="false">
+            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 15.5A8.5 8.5 0 0 1 8.5 3.5a8.6 8.6 0 1 0 12 12Z"/></svg>
+            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+          </button>
           <button class="button-secondary" id="backup-button" type="button" title="Maak een gedateerde back-up in de projectmap">Backup maken</button>
           <div class="avatar" aria-label="Persoonlijk overzicht">JD</div>
         </header>
@@ -478,7 +560,7 @@
               <div class="chart" id="chart" aria-label="Grafiek"></div>
             </section>
             <section class="panel">
-              <div class="panel-header"><div><h2 class="panel-title" id="breakdown-title">Inkomsten per bron</h2><p class="panel-note">Verdeling in de gekozen periode</p></div></div>
+              <div class="panel-header"><div><h2 class="panel-title" id="breakdown-title">Inkomsten per categorie</h2><p class="panel-note">Verdeling in de gekozen periode</p></div></div>
               <div class="breakdown" id="breakdown"></div>
             </section>
           </div>
@@ -499,8 +581,8 @@
             </div>
             <div class="bulk-edit" id="bulk-edit" hidden>
               <span class="bulk-note" id="bulk-note"></span>
-              <select id="bulk-group" aria-label="Nieuwe bron of categorie">
-                <option value="">Kies nieuwe bron</option>
+              <select id="bulk-group" aria-label="Nieuwe categorie">
+                <option value="">Kies nieuwe categorie</option>
               </select>
               <button id="bulk-apply" type="button" disabled>Alles aanpassen</button>
               <button id="bulk-visibility" type="button" disabled>Verberg gefilterde</button>
@@ -516,7 +598,7 @@
           </section>
           </div>
           <section class="panel settings-panel" id="settings-panel" hidden>
-            <p class="settings-intro">Je gegevens worden lokaal bewaard in <code>data/finance.json</code>. Een back-up wordt met datum en tijd opgeslagen in de map <code>backups/</code>. Beheer hier je bronnen en categorieën; verwijderen wist geen bestaande transacties.</p>
+            <p class="settings-intro">Je gegevens worden lokaal bewaard in <code>data/finance.json</code>. Een back-up wordt met datum en tijd opgeslagen in de map <code>backups/</code>. Beheer hier je categorieën en labels; verwijderen wist geen bestaande transacties.</p>
             <div class="settings-project-actions">
               <form class="settings-project-save" id="save-project-form">
                 <input id="save-project-name" type="text" maxlength="80" required aria-label="Naam voor het projectbestand" placeholder="Naam voor projectbestand" />
@@ -557,14 +639,15 @@
     <script>
       (() => {
         const STORAGE_KEY = "saldo-finance-v1";
+        const THEME_STORAGE_KEY = "finlit-theme-v1";
         const STORAGE_API = window.location.protocol === "file:" ? "http://127.0.0.1:4173/api" : "/api";
         const monthNames = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
         const configs = {
           income: {
             title: "Inkomsten", subtitle: "Wat er binnenkomt.", add: "Inkomst toevoegen", singular: "Inkomst",
-            chartTitle: "Inkomsten & uitgaven", chartNote: "Afgelopen 6 maanden", breakdownTitle: "Inkomsten per bron", tableTitle: "Recente inkomsten", tableNote: "Inkomsten in deze periode",
-            groupLabel: "Bron", groupPlaceholder: "Bijv. Salaris", groupOptions: ["Salaris", "Freelance", "Toeslag", "Overig"], amountLabel: "Bedrag", dateLabel: "Ontvangen op", amountHeader: "Bedrag",
-            metrics: ["Totaal ontvangen", "Gemiddeld per maand", "Aantal inkomsten", "Grootste bron"],
+            chartTitle: "Inkomsten & uitgaven", chartNote: "Afgelopen 6 maanden", breakdownTitle: "Inkomsten per categorie", tableTitle: "Recente inkomsten", tableNote: "Inkomsten in deze periode",
+            groupLabel: "Categorie", groupPlaceholder: "Bijv. Salaris", groupOptions: ["Salaris", "Freelance", "Toeslag", "Overig"], amountLabel: "Bedrag", dateLabel: "Ontvangen op", amountHeader: "Bedrag",
+            metrics: ["Totaal ontvangen", "Gemiddeld per maand", "Aantal inkomsten", "Grootste categorie"],
           },
           expenses: {
             title: "Uitgaven", subtitle: "Waar je geld naartoe gaat.", add: "Uitgave toevoegen", singular: "Uitgave",
@@ -611,6 +694,28 @@
         let toastTimer;
 
         const $ = (selector) => document.querySelector(selector);
+        const updateTheme = (isDark, savePreference = false) => {
+          document.documentElement.dataset.theme = isDark ? "dark" : "light";
+          $("#theme-toggle").setAttribute("aria-pressed", String(isDark));
+          $("#theme-toggle").setAttribute("aria-label", isDark ? "Lichte modus inschakelen" : "Donkere modus inschakelen");
+          $("#theme-toggle").title = isDark ? "Lichte modus inschakelen" : "Donkere modus inschakelen";
+          document.querySelector('meta[name="theme-color"]').content = isDark ? "#171d19" : "#f6f7f5";
+          if (savePreference) {
+            try {
+              localStorage.setItem(THEME_STORAGE_KEY, isDark ? "dark" : "light");
+            } catch (error) {
+              console.error("Themakeuze kon niet worden opgeslagen.", error);
+              showToast("Thema gewijzigd, maar de voorkeur kon niet worden opgeslagen.");
+            }
+          }
+        };
+        let isDarkTheme = false;
+        try {
+          isDarkTheme = localStorage.getItem(THEME_STORAGE_KEY) === "dark";
+        } catch (error) {
+          console.error("Themakeuze kon niet worden gelezen.", error);
+        }
+        updateTheme(isDarkTheme);
         const money = (value) => new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value || 0);
         const tableMoney = (value) => {
           const parts = new Intl.NumberFormat("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).formatToParts(value || 0);
@@ -857,13 +962,18 @@
           toastTimer = setTimeout(() => toast.classList.remove("visible"), 2600);
         }
         const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
-        const parseTags = (value) => [...new Map(
-          String(value || "")
-            .split(/[;,]/)
-            .map((tag) => tag.trim())
-            .filter(Boolean)
-            .map((tag) => [tag.toLocaleLowerCase("nl"), tag]),
-        ).values()];
+        const parseTags = (value) => {
+          const tags = [];
+          const seen = new Set();
+          for (const tag of String(value || "").split(/[;,]/).map((value) => value.trim()).filter(Boolean)) {
+            const key = tag.toLocaleLowerCase("nl");
+            if (!seen.has(key)) {
+              seen.add(key);
+              tags.push(tag);
+            }
+          }
+          return tags;
+        };
         const calendarYear = new Date().getFullYear();
         $('#period-select option[value="year"]').textContent = `Dit jaar (${calendarYear})`;
         $('#period-select option[value="last-year"]').textContent = `Vorig jaar (${calendarYear - 1})`;
@@ -1194,7 +1304,7 @@
           if (settingsMode) {
             $("#eyebrow").textContent = "Beheer je voorkeuren";
             $("#page-title").textContent = "Instellingen";
-            $("#page-subtitle").textContent = "Pas je bronnen en categorieën aan.";
+            $("#page-subtitle").textContent = "Pas je categorieën en labels aan.";
             renderSettings();
             return;
           }
@@ -1231,7 +1341,7 @@
           $("#settings-grid").innerHTML = Object.entries(configs).map(([view, config]) => {
             const options = groupOptionsFor(view);
             return `<section class="settings-group"><h3>${escapeHTML(config.title)} · ${escapeHTML(config.groupLabel.toLocaleLowerCase("nl"))}</h3>
-              <div class="settings-options">${options.length ? options.map((option) => `<div class="settings-option"><span class="settings-option-name">${escapeHTML(option)}</span><span class="settings-option-actions"><button class="settings-remove settings-rename" type="button" data-rename-view="${view}" data-rename-option="${escapeHTML(option)}" aria-label="${escapeHTML(option)} hernoemen" title="Hernoemen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5 5 5M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"/></svg></button><button class="settings-remove" type="button" data-remove-view="${view}" data-remove-option="${escapeHTML(option)}" aria-label="${escapeHTML(option)} verwijderen" title="Verwijderen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 7h14M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg></button></span></div>`).join("") : '<p class="settings-empty">Nog geen bronnen of categorieën.</p>'}</div>
+              <div class="settings-options">${options.length ? options.map((option) => `<div class="settings-option"><span class="settings-option-name">${escapeHTML(option)}</span><span class="settings-option-actions"><button class="settings-remove settings-rename" type="button" data-rename-view="${view}" data-rename-option="${escapeHTML(option)}" aria-label="${escapeHTML(option)} hernoemen" title="Hernoemen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5 5 5M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"/></svg></button><button class="settings-remove" type="button" data-remove-view="${view}" data-remove-option="${escapeHTML(option)}" aria-label="${escapeHTML(option)} verwijderen" title="Verwijderen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 7h14M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg></button></span></div>`).join("") : '<p class="settings-empty">Nog geen categorieën of labels.</p>'}</div>
               <form class="settings-add" data-add-view="${view}"><input type="text" name="option" maxlength="50" required aria-label="Nieuwe ${escapeHTML(config.groupLabel.toLocaleLowerCase("nl"))}" placeholder="Nieuwe ${escapeHTML(config.groupLabel.toLocaleLowerCase("nl"))}" /><button type="submit">Toevoegen</button></form>
             </section>`;
           }).join("");
@@ -1449,8 +1559,8 @@
                 : "";
               const visibilityButton = `<button class="icon-button visibility" data-action="visibility" data-id="${escapeHTML(entry.id)}" aria-label="${entry.hidden ? "Bedrag herstellen" : "Bedrag verbergen"}: ${escapeHTML(entry.title)}" title="${entry.hidden ? "Bedrag herstellen" : "Bedrag verbergen"}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${entry.hidden ? '<path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.7 10.7 0 0 1 12 5c5.5 0 9 7 9 7a14 14 0 0 1-2.1 2.9M6.2 6.2C4.1 7.6 3 12 3 12a14 14 0 0 0 4.3 4.8A8 8 0 0 0 12 19c1.1 0 2-.2 2.9-.6"/>' : '<path d="M2.5 12s3.2-7 9.5-7 9.5 7 9.5 7-3.2 7-9.5 7-9.5-7-9.5-7Z"/><circle cx="12" cy="12" r="2.5"/>'}</svg></button>`;
               return `<tr class="${entry.hidden ? "hidden-row" : ""}">
-                <td><div class="item-main">${escapeHTML(entry.title)}</div><div class="item-sub ${entry.hidden ? "item-sub-hidden" : ""}">${itemSubtitle}</div>${entry.note ? `<div class="item-note">${escapeHTML(entry.note)}</div>` : ""}${entryTags ? `<div class="item-tags">${entryTags}</div>` : ""}</td>
-                <td><button class="tag tag-filter" type="button" data-action="filter-group" data-group="${escapeHTML(entry.group || "Overig")}" aria-pressed="${currentGroupFilter === (entry.group || "Overig")}" aria-label="Filter op categorie ${escapeHTML(entry.group || "Overig")}" title="Filter op ${escapeHTML(entry.group || "Overig")}" style="color:${tagColor};background:${tagColor}20"><span class="tag-dot" style="background:${tagColor}"></span>${escapeHTML(entry.group || "Overig")}</button></td>
+                <td><div class="item-main">${escapeHTML(entry.title)}</div><div class="item-sub ${entry.hidden ? "item-sub-hidden" : ""}">${itemSubtitle}</div>${entry.note ? `<div class="item-note">${escapeHTML(entry.note)}</div>` : ""}</td>
+                <td><div class="category-cell"><button class="tag tag-filter" type="button" data-action="filter-group" data-group="${escapeHTML(entry.group || "Overig")}" aria-pressed="${currentGroupFilter === (entry.group || "Overig")}" aria-label="Filter op categorie ${escapeHTML(entry.group || "Overig")}" title="Filter op ${escapeHTML(entry.group || "Overig")}" style="color:${tagColor};background:${tagColor}20"><span class="tag-dot" style="background:${tagColor}"></span>${escapeHTML(entry.group || "Overig")}</button>${entryTags ? `<div class="item-tags">${entryTags}</div>` : ""}</div></td>
                 ${extraCells}
                 <td class="amount ${entry.hidden ? "hidden-amount" : ""}">${entry.hidden ? "Verborgen" : tableMoney(entry.amount)}</td>
                 <td><div class="row-actions">
@@ -1467,7 +1577,7 @@
           if (canBulkEdit) {
             const options = [...new Set([...groupOptionsFor(currentView), ...filtered.map((entry) => entry.group).filter(Boolean)])];
             const selectedValue = $("#bulk-group").value;
-            $("#bulk-group").innerHTML = `<option value="">Kies nieuwe ${currentView === "income" ? "bron" : "categorie"}</option>${options.map((option) => `<option value="${escapeHTML(option)}">${escapeHTML(option)}</option>`).join("")}`;
+            $("#bulk-group").innerHTML = `<option value="">Kies nieuwe categorie</option>${options.map((option) => `<option value="${escapeHTML(option)}">${escapeHTML(option)}</option>`).join("")}`;
             if (options.includes(selectedValue)) $("#bulk-group").value = selectedValue;
             $("#bulk-note").textContent = `${filtered.length} gefilterde ${filtered.length === 1 ? "transactie" : "transacties"}`;
             $("#bulk-apply").disabled = !$("#bulk-group").value;
@@ -1665,7 +1775,7 @@
           if (!Object.hasOwn(configs, view) || !option || option.length > 50) return;
           const options = groupOptionsFor(view);
           if (options.some((existing) => existing.toLocaleLowerCase("nl") === option.toLocaleLowerCase("nl"))) {
-            $("#settings-error").textContent = "Deze bron of categorie bestaat al.";
+            $("#settings-error").textContent = "Deze categorie bestaat al.";
             return;
           }
           const nextOptions = { ...data.groupOptions, [view]: [...options, option] };
@@ -1711,6 +1821,10 @@
           renderTable();
         });
         $("#period-select").addEventListener("change", () => { renderMetrics(); renderBreakdown(); renderTable(); });
+        $("#theme-toggle").addEventListener("click", () => {
+          isDarkTheme = !isDarkTheme;
+          updateTheme(isDarkTheme, true);
+        });
         $("#comparison-period").addEventListener("change", () => {
           comparisonPeriodOffset = 0;
           renderChart();
@@ -1763,7 +1877,7 @@
           renderMetrics();
           renderBreakdown();
           renderTable();
-          showToast(`Bron/categorie aangepast voor ${filtered.length} transacties.`);
+          showToast(`Categorie aangepast voor ${filtered.length} transacties.`);
         });
         $("#bulk-visibility").addEventListener("click", async () => {
           if (currentView !== "income" && currentView !== "expenses") return;
