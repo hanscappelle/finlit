@@ -620,7 +620,7 @@
               <div><h2 class="panel-title" id="table-title">Recente inkomsten</h2><p class="panel-note" id="table-note">Je inkomsten in de gekozen periode</p></div>
               <div class="table-filters">
                 <div class="search-field">
-                  <input class="search-input" id="search-input" type="search" placeholder="Zoek op omschrijving, categorie of notitie" aria-label="Zoek gegevens" />
+                  <input class="search-input" id="search-input" type="search" placeholder="Zoek op omschrijving, categorie, tag of bedrag" aria-label="Zoek op omschrijving, categorie, tag, notitie of exact bedrag" />
                   <button class="search-clear" id="clear-search" type="button" aria-label="Zoekfilter wissen" title="Zoekfilter wissen" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
                 </div>
                 <button class="group-filter" id="clear-group-filter" type="button" aria-label="Categoriefilter wissen" hidden></button>
@@ -1774,8 +1774,23 @@
           return Boolean(currentGroupFilter || currentTagFilter || $("#search-input").value.trim() || $("#date-from").value || $("#date-to").value);
         }
 
+        function parseSearchAmount(query) {
+          const value = query.replace(/^€\s*/, "").trim();
+          let normalized;
+          if (/^-?(?:\d+|\d{1,3}(?:[. \u00a0\u202f]\d{3})+)(?:,\d{1,2})?$/.test(value)) {
+            normalized = value.replace(/[. \u00a0\u202f]/g, "").replace(",", ".");
+          } else if (/^-?\d+\.\d{1,2}$/.test(value)) {
+            normalized = value;
+          } else {
+            return null;
+          }
+          const amount = Number(normalized);
+          return Number.isFinite(amount) ? Math.round(amount * 100) : null;
+        }
+
         function getFilteredTableEntries() {
           const query = $("#search-input").value.trim().toLocaleLowerCase("nl");
+          const amountCents = parseSearchAmount(query);
           const dateFrom = $("#date-from").value;
           const dateTo = $("#date-to").value;
           const showHidden = $("#show-hidden").checked;
@@ -1783,7 +1798,9 @@
           const visibleEntries = periodEntries(currentView, true).filter((entry) => {
             if (currentGroupFilter && (entry.group || "Overig") !== currentGroupFilter) return false;
             if (currentTagFilter && !(entry.tags || []).includes(currentTagFilter)) return false;
-            if (!`${entry.title} ${entry.group} ${(entry.tags || []).join(" ")} ${entry.note || ""}`.toLocaleLowerCase("nl").includes(query)) return false;
+            const textMatches = `${entry.title} ${entry.group} ${(entry.tags || []).join(" ")} ${entry.note || ""}`.toLocaleLowerCase("nl").includes(query);
+            const amountMatches = !entry.hidden && amountCents !== null && Math.round(Number(entry.amount) * 100) === amountCents;
+            if (!textMatches && !amountMatches) return false;
             if (dateFrom || dateTo) {
               if (!entry.date || (dateFrom && entry.date < dateFrom) || (dateTo && entry.date > dateTo)) return false;
             }
