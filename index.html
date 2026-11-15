@@ -566,6 +566,7 @@
                 <option value="quarter">Dit kwartaal</option>
                 <option value="year">Dit jaar</option>
                 <option value="last-year">Vorig jaar</option>
+                <option value="two-years-ago">2 jaar geleden</option>
                 <option value="all" selected>Alles</option>
               </select>
               <button class="button-secondary import-button" id="import-button" type="button" title="Kies een map met Belfius-afschriften (PDF)">
@@ -1097,6 +1098,7 @@
         const calendarYear = new Date().getFullYear();
         $('#period-select option[value="year"]').textContent = `Dit jaar (${calendarYear})`;
         $('#period-select option[value="last-year"]').textContent = `Vorig jaar (${calendarYear - 1})`;
+        $('#period-select option[value="two-years-ago"]').textContent = `2 jaar geleden (${calendarYear - 2})`;
         const currentPeriod = () => $("#period-select").value;
         const periodEntries = (view, includeHidden = false) => {
           const entries = data[view].filter((entry) => includeHidden || !entry.hidden);
@@ -1106,6 +1108,7 @@
             const d = parseDate(entry.date);
             if (Number.isNaN(d.getTime())) return false;
             if (currentPeriod() === "last-year") return d.getFullYear() === now.getFullYear() - 1;
+            if (currentPeriod() === "two-years-ago") return d.getFullYear() === now.getFullYear() - 2;
             if (currentPeriod() === "month") return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
             if (currentPeriod() === "quarter") return Math.floor(d.getMonth() / 3) === Math.floor(now.getMonth() / 3) && d.getFullYear() === now.getFullYear();
             return d.getFullYear() === now.getFullYear();
@@ -1690,7 +1693,7 @@
           const count = selected.length;
           if (currentView === "income" || currentView === "expenses") {
             const period = currentPeriod();
-            const monthCount = period === "month" ? 1 : period === "quarter" ? 3 : period === "year" ? 12 : Math.max(1, new Set(selected.map((entry) => monthKey(entry.date))).size);
+            const monthCount = period === "month" ? 1 : period === "quarter" ? 3 : ["year", "last-year", "two-years-ago"].includes(period) ? 12 : Math.max(1, new Set(selected.map((entry) => monthKey(entry.date))).size);
             const avg = total / monthCount;
             const grouped = groupTotals(selected);
             const topGroup = Object.entries(grouped).sort((a, b) => b[1] - a[1])[0];
