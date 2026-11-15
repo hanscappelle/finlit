@@ -230,10 +230,12 @@
       .date-filter input[aria-invalid="true"] { border-color: var(--red); }
       .hidden-toggle { display: flex; height: 39px; flex: 0 0 auto; align-items: center; gap: 7px; color: #657069; font-size: 10px; white-space: nowrap; cursor: pointer; }
       .hidden-toggle input { width: 14px; height: 14px; margin: 0; accent-color: var(--green); }
-      .bulk-edit { display: flex; align-items: center; justify-content: flex-end; gap: 9px; padding: 11px 19px; border-bottom: 1px solid #eff1ee; background: #f9fbf9; }
+      .bulk-edit { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 9px; padding: 11px 19px; border-bottom: 1px solid #eff1ee; background: #f9fbf9; }
       .bulk-edit[hidden] { display: none; }
       .bulk-note { margin-right: auto; color: #647069; font-size: 11px; }
       .bulk-edit select { height: 34px; min-width: 150px; padding: 0 9px; border: 1px solid #e3e8e3; border-radius: 6px; color: #56635b; background: #fff; font-size: 11px; }
+      .bulk-edit input { height: 34px; min-width: 150px; flex: 1 1 180px; padding: 0 9px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: var(--paper); font-size: 11px; }
+      .bulk-tags-label { color: #647069; font-size: 11px; }
       .bulk-edit button { height: 34px; padding: 0 11px; border: 0; border-radius: 6px; color: #fff; background: var(--green); font-size: 11px; font-weight: 650; }
       .bulk-edit button:hover { background: var(--green-dark); }
       .bulk-edit button:disabled { cursor: not-allowed; opacity: .5; }
@@ -336,6 +338,8 @@
       .planning-item { min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 7px; }
       .planning-item-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
       .planning-item-title { min-width: 0; overflow-wrap: anywhere; font-size: 12px; font-weight: 650; }
+      .planning-goal-filter { padding: 0; border: 0; color: var(--ink); background: transparent; font: inherit; text-align: left; }
+      .planning-goal-filter:hover, .planning-goal-filter[aria-pressed="true"] { color: var(--green); text-decoration: underline; text-underline-offset: 2px; }
       .planning-item-meta { margin-top: 6px; color: var(--muted); font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
       .planning-item-text { margin-top: 6px; color: var(--muted); font-size: 11px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
       .planning-item-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
@@ -454,7 +458,7 @@
       :root[data-theme="dark"] .legend, :root[data-theme="dark"] .breakdown-name, :root[data-theme="dark"] .table-total { color: #b2beb6; }
       :root[data-theme="dark"] .progress { background: #36413a; }
       :root[data-theme="dark"] .table-toolbar, :root[data-theme="dark"] .bulk-edit { border-color: #354139; background: #202923; }
-      :root[data-theme="dark"] .bulk-edit select, :root[data-theme="dark"] .table-filters input,
+      :root[data-theme="dark"] .bulk-edit select, :root[data-theme="dark"] .bulk-edit input, :root[data-theme="dark"] .table-filters input,
       :root[data-theme="dark"] .period-select, :root[data-theme="dark"] .comparison-select,
       :root[data-theme="dark"] .button-secondary, :root[data-theme="dark"] .settings-project-save input {
         border-color: var(--line);
@@ -634,6 +638,13 @@
               <button id="bulk-apply" type="button" disabled>Alles aanpassen</button>
               <button id="bulk-visibility" type="button" disabled>Verberg gefilterde</button>
             </div>
+            <div class="bulk-edit" id="bulk-tags" hidden>
+              <label class="bulk-tags-label" for="bulk-tags-input">Tags voor gefilterde transacties</label>
+              <input id="bulk-tags-input" type="text" maxlength="500" placeholder="Tags, gescheiden door komma's" aria-describedby="bulk-tags-hint" />
+              <button id="bulk-tags-add" type="button">Tags toevoegen</button>
+              <button id="bulk-tags-remove" type="button">Tags verwijderen</button>
+              <span class="bulk-tags-label" id="bulk-tags-hint">Scheid meerdere tags met komma's of puntkomma's.</span>
+            </div>
             <div class="table-wrap">
               <table id="transaction-table">
                 <colgroup id="table-columns"></colgroup>
@@ -671,6 +682,7 @@
               </section>
               <section class="panel planning-panel">
                 <h2 class="panel-title">Opmerkingen</h2><p class="panel-note">Los of gekoppeld aan een doelstelling of taak.</p>
+                <label class="planning-filter">Filter opmerkingen op doelstelling<select id="note-goal-filter"><option value="">Alle opmerkingen</option></select></label>
                 <div class="planning-list" id="notes-list"></div>
                 <form class="planning-form" id="note-form">
                   <input name="id" type="hidden" />
@@ -1453,14 +1465,18 @@
           const options = (items) => items.map((item) => `<option value="${escapeHTML(item.id)}">${escapeHTML(item.title)}</option>`).join("");
           const goalSelect = $("#task-form select[name=goalId]");
           const taskFilter = $("#task-goal-filter");
+          const noteFilter = $("#note-goal-filter");
           const linkSelect = $("#note-form select[name=link]");
           const selectedGoal = goalSelect.value;
           const selectedTaskFilter = taskFilter.value;
+          const selectedNoteFilter = noteFilter.value;
           const selectedLink = linkSelect.value;
           goalSelect.innerHTML = `<option value="">Geen doelstelling</option>${options(data.goals)}`;
           if (data.goals.some((goal) => goal.id === selectedGoal)) goalSelect.value = selectedGoal;
           taskFilter.innerHTML = `<option value="">Alle taken</option><option value="unlinked">Zonder doelstelling</option>${data.goals.map((goal) => `<option value="goal:${escapeHTML(goal.id)}">${escapeHTML(goal.title)}</option>`).join("")}`;
           if ([...taskFilter.options].some((option) => option.value === selectedTaskFilter)) taskFilter.value = selectedTaskFilter;
+          noteFilter.innerHTML = `<option value="">Alle opmerkingen</option>${data.goals.map((goal) => `<option value="goal:${escapeHTML(goal.id)}">${escapeHTML(goal.title)}</option>`).join("")}`;
+          if ([...noteFilter.options].some((option) => option.value === selectedNoteFilter)) noteFilter.value = selectedNoteFilter;
           linkSelect.innerHTML = `<option value="">Geen koppeling</option>${data.goals.map((goal) => `<option value="goal:${escapeHTML(goal.id)}">Doelstelling: ${escapeHTML(goal.title)}</option>`).join("")}${data.tasks.map((task) => `<option value="task:${escapeHTML(task.id)}">Taak: ${escapeHTML(task.title)}</option>`).join("")}`;
           if ([...linkSelect.options].some((option) => option.value === selectedLink)) linkSelect.value = selectedLink;
           const deadline = (date) => date ? `Deadline: ${escapeHTML(dateString(date))}` : "Geen deadline";
@@ -1469,7 +1485,7 @@
             const tasks = data.tasks.filter((task) => task.goalId === goal.id);
             const done = tasks.filter((task) => task.done).length;
             const percent = tasks.length ? Math.round(done / tasks.length * 100) : 0;
-            return `<article class="planning-item"><div class="planning-item-title">${escapeHTML(goal.title)}</div>${goal.description ? `<div class="planning-item-text">${escapeHTML(goal.description)}</div>` : ""}<div class="planning-item-meta">${deadline(goal.dueDate)} · ${tasks.length ? `${done} van ${tasks.length} taken afgerond (${percent}%)` : "Nog geen gekoppelde taken"}</div>${tasks.length ? `<div class="planning-progress" role="progressbar" aria-label="Voortgang ${escapeHTML(goal.title)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><span style="width:${percent}%"></span></div>` : ""}${actions("goal", goal.id)}</article>`;
+            return `<article class="planning-item"><button class="planning-item-title planning-goal-filter" type="button" data-goal-filter="${escapeHTML(goal.id)}" aria-pressed="${taskFilter.value === `goal:${goal.id}` && noteFilter.value === `goal:${goal.id}`}" aria-label="Filter taken en opmerkingen op doelstelling ${escapeHTML(goal.title)}">${escapeHTML(goal.title)}</button>${goal.description ? `<div class="planning-item-text">${escapeHTML(goal.description)}</div>` : ""}<div class="planning-item-meta">${deadline(goal.dueDate)} · ${tasks.length ? `${done} van ${tasks.length} taken afgerond (${percent}%)` : "Nog geen gekoppelde taken"}</div>${tasks.length ? `<div class="planning-progress" role="progressbar" aria-label="Voortgang ${escapeHTML(goal.title)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><span style="width:${percent}%"></span></div>` : ""}${actions("goal", goal.id)}</article>`;
           }).join("") : '<p class="planning-empty">Nog geen doelstellingen.</p>';
           const filteredTasks = data.tasks.filter((task) => !taskFilter.value || (taskFilter.value === "unlinked" ? !task.goalId : `goal:${task.goalId}` === taskFilter.value))
             .sort((a, b) => Number(a.done) - Number(b.done));
@@ -1477,10 +1493,15 @@
             const goal = data.goals.find((item) => item.id === task.goalId);
             return `<tr class="${task.done ? "completed-task" : ""}"><td><input type="checkbox" data-planning-action="done" data-id="${escapeHTML(task.id)}" ${task.done ? "checked" : ""} aria-label="${escapeHTML(task.title)} afgerond" /></td><td><div class="planning-item-title">${escapeHTML(task.title)}</div><div class="planning-item-meta">${deadline(task.dueDate)}${goal ? ` · Doelstelling: ${escapeHTML(goal.title)}` : ""}</div></td><td><button class="icon-button" type="button" data-planning-action="edit" data-type="task" data-id="${escapeHTML(task.id)}" aria-label="Bewerk taak ${escapeHTML(task.title)}" title="Bewerken"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 20 4-.8L19 8.2 15.8 5 4.8 16 4 20Z"/><path d="m14.5 6.3 3.2 3.2"/></svg></button><button class="icon-button delete" type="button" data-planning-action="delete" data-type="task" data-id="${escapeHTML(task.id)}" aria-label="Verwijder taak ${escapeHTML(task.title)}" title="Verwijderen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button></td></tr>`;
           }).join("")}</tbody></table></div>` : `<p class="planning-empty">${taskFilter.value ? "Geen taken voor deze selectie." : "Nog geen taken."}</p>`;
-          $("#notes-list").innerHTML = data.notes.length ? data.notes.map((note) => {
+          const noteGoalId = noteFilter.value.slice("goal:".length);
+          const taskIdsForGoal = new Set(data.tasks.filter((task) => task.goalId === noteGoalId).map((task) => task.id));
+          const filteredNotes = data.notes.filter((note) => !noteFilter.value
+            || (note.linkType === "goal" && note.linkId === noteGoalId)
+            || (note.linkType === "task" && taskIdsForGoal.has(note.linkId)));
+          $("#notes-list").innerHTML = filteredNotes.length ? filteredNotes.map((note) => {
             const linked = note.linkType ? data[note.linkType === "goal" ? "goals" : "tasks"].find((item) => item.id === note.linkId) : null;
             return `<article class="planning-item"><div class="planning-item-text">${escapeHTML(note.text)}</div>${linked ? `<div class="planning-item-meta">${note.linkType === "goal" ? "Doelstelling" : "Taak"}: ${escapeHTML(linked.title)}</div>` : ""}${actions("note", note.id)}</article>`;
-          }).join("") : '<p class="planning-empty">Nog geen opmerkingen.</p>';
+          }).join("") : `<p class="planning-empty">${noteFilter.value ? "Geen opmerkingen voor deze doelstelling." : "Nog geen opmerkingen."}</p>`;
         }
 
         function resetPlanningForm(form) {
@@ -1531,7 +1552,7 @@
         });
 
         $("#planning-dashboard").addEventListener("change", async (event) => {
-          if (event.target.id === "task-goal-filter") {
+          if (event.target.id === "task-goal-filter" || event.target.id === "note-goal-filter") {
             renderPlanning();
             return;
           }
@@ -1546,6 +1567,17 @@
         });
 
         $("#planning-dashboard").addEventListener("click", async (event) => {
+          const goalButton = event.target.closest("button[data-goal-filter]");
+          if (goalButton) {
+            const goalId = goalButton.dataset.goalFilter;
+            const value = `goal:${goalId}`;
+            const clear = $("#task-goal-filter").value === value && $("#note-goal-filter").value === value;
+            $("#task-goal-filter").value = clear ? "" : value;
+            $("#note-goal-filter").value = clear ? "" : value;
+            renderPlanning();
+            [...$("#goals-list").querySelectorAll("button[data-goal-filter]")].find((item) => item.dataset.goalFilter === goalId)?.focus();
+            return;
+          }
           const cancel = event.target.closest(".planning-cancel");
           if (cancel) {
             resetPlanningForm(cancel.closest("form"));
@@ -1854,6 +1886,7 @@
           }
           const canBulkEdit = (currentView === "income" || currentView === "expenses") && hasTableFilters() && filtered.length > 0;
           $("#bulk-edit").hidden = !canBulkEdit;
+          $("#bulk-tags").hidden = !canBulkEdit;
           if (canBulkEdit) {
             const options = [...new Set([...groupOptionsFor(currentView), ...filtered.map((entry) => entry.group).filter(Boolean)])];
             const selectedValue = $("#bulk-group").value;
@@ -2150,6 +2183,61 @@
         $("#bulk-group").addEventListener("change", () => {
           $("#bulk-apply").disabled = !$("#bulk-group").value;
         });
+        let bulkTagsPending = false;
+        $("#bulk-tags").addEventListener("click", async (event) => {
+          const button = event.target.closest("button");
+          if (!button || bulkTagsPending || (button.id !== "bulk-tags-add" && button.id !== "bulk-tags-remove")) return;
+          if ((currentView !== "income" && currentView !== "expenses") || !hasTableFilters()) return;
+          const tags = parseTags($("#bulk-tags-input").value);
+          if (!tags.length) {
+            showToast("Vul minimaal één tag in.");
+            $("#bulk-tags-input").focus();
+            return;
+          }
+          const filtered = getFilteredTableEntries();
+          if (!filtered.length) {
+            showToast("Geen gefilterde transacties om aan te passen.");
+            return;
+          }
+          const remove = button.id === "bulk-tags-remove";
+          const keys = new Set(tags.map((tag) => tag.toLocaleLowerCase("nl")));
+          const matchingIds = new Set(filtered.map((entry) => entry.id));
+          const view = currentView;
+          let changed = 0;
+          const entries = data[view].map((entry) => {
+            if (!matchingIds.has(entry.id)) return entry;
+            const existing = entry.tags || [];
+            const nextTags = remove
+              ? existing.filter((tag) => !keys.has(tag.toLocaleLowerCase("nl")))
+              : parseTags([...existing, ...tags].join(", "));
+            if (nextTags.length === existing.length && nextTags.every((tag, index) => tag === existing[index])) return entry;
+            changed++;
+            return { ...entry, tags: nextTags };
+          });
+          if (!changed) {
+            showToast(remove ? "Geen van deze tags gevonden in de selectie." : "Deze tags staan al bij alle geselecteerde transacties.");
+            return;
+          }
+          if (remove && !window.confirm(`Tags verwijderen bij ${changed} ${changed === 1 ? "transactie" : "transacties"}?`)) return;
+          const previousData = data;
+          data = { ...data, [view]: entries };
+          bulkTagsPending = true;
+          app.inert = true;
+          $("#bulk-tags-add").disabled = true;
+          $("#bulk-tags-remove").disabled = true;
+          const saved = await persist();
+          bulkTagsPending = false;
+          app.inert = false;
+          $("#bulk-tags-add").disabled = false;
+          $("#bulk-tags-remove").disabled = false;
+          if (!saved) {
+            data = previousData;
+            return;
+          }
+          $("#bulk-tags-input").value = "";
+          renderTable();
+          showToast(`Tags ${remove ? "verwijderd bij" : "toegevoegd aan"} ${changed} ${changed === 1 ? "transactie" : "transacties"}.`);
+        });
         $("#bulk-apply").addEventListener("click", async () => {
           if (currentView !== "income" && currentView !== "expenses") return;
           const nextGroup = $("#bulk-group").value;
@@ -2367,6 +2455,7 @@
             $("#period-select").value = "all";
             $("#show-hidden").checked = false;
             $("#task-goal-filter").value = "";
+            $("#note-goal-filter").value = "";
             document.querySelectorAll(".planning-form").forEach(resetPlanningForm);
             updatePage();
             showToast(`Projectbestand geladen. Vorige gegevens veiliggesteld in ${backupPath}.`);
