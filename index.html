@@ -243,6 +243,11 @@
       .item-sub { margin-top: 3px; color: #9aa29d; font-size: 10px; }
       .item-sub-hidden { color: #ad7a4d; }
       .item-main { width: 100%; overflow-wrap: break-word; white-space: normal; }
+      .item-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+      .item-tag { padding: 3px 7px; border: 0; border-radius: 10px; color: #60766a; background: #edf3ee; font-size: 9px; line-height: 1.2; }
+      .item-tag:hover, .item-tag[aria-pressed="true"] { color: #355a45; background: #dcebe0; }
+      .tag-filter[hidden] { display: none; }
+      .field-hint { margin: 4px 0 0; color: #89928c; font-size: 9px; line-height: 1.4; }
       .item-note { margin-top: 5px; color: #657069; font-size: 10px; line-height: 1.45; overflow-wrap: anywhere; white-space: pre-wrap; }
       .tag-filter { border: 0; font: inherit; cursor: pointer; }
       .tag-filter:hover, .tag-filter[aria-pressed="true"] { box-shadow: inset 0 0 0 1px currentColor; }
@@ -486,6 +491,7 @@
                   <button class="search-clear" id="clear-search" type="button" aria-label="Zoekfilter wissen" title="Zoekfilter wissen" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
                 </div>
                 <button class="group-filter" id="clear-group-filter" type="button" aria-label="Categoriefilter wissen" hidden></button>
+                <button class="group-filter" id="clear-tag-filter" type="button" aria-label="Tagfilter wissen" hidden></button>
                 <label class="date-filter">Vanaf<input id="date-from" type="date" aria-label="Datum vanaf" /></label>
                 <label class="date-filter">Tot en met<input id="date-to" type="date" aria-label="Datum tot en met" /></label>
                 <label class="hidden-toggle"><input id="show-hidden" type="checkbox" checked />Toon verborgen bedragen</label>
@@ -592,6 +598,7 @@
         const categoryColors = ["#6e9b7c", "#d99a69", "#7d9bb2", "#b58baf", "#c5a854", "#8ba6a0"];
         let currentView = "income";
         let currentGroupFilter = "";
+        let currentTagFilter = "";
         let comparisonPeriodOffset = 0;
         const sidebar = document.querySelector(".sidebar");
         const app = document.querySelector(".app");
@@ -674,6 +681,11 @@
         const normalizeData = (parsed) => {
           if (!parsed || !["income", "expenses", "investments", "loans"].every((key) => Array.isArray(parsed[key]))) {
             throw new Error("De financiële gegevens hebben een ongeldige structuur.");
+          }
+          for (const view of ["income", "expenses", "investments", "loans"]) {
+            parsed[view] = parsed[view].map((entry) => entry && typeof entry === "object"
+              ? { ...entry, tags: parseTags(Array.isArray(entry.tags) ? entry.tags.join(", ") : entry.tags) }
+              : entry);
           }
           if (!Array.isArray(parsed.importedTransactionKeys)) parsed.importedTransactionKeys = [];
           parsed.groupOptions = Object.fromEntries(
@@ -845,6 +857,13 @@
           toastTimer = setTimeout(() => toast.classList.remove("visible"), 2600);
         }
         const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+        const parseTags = (value) => [...new Map(
+          String(value || "")
+            .split(/[;,]/)
+            .map((tag) => tag.trim())
+            .filter(Boolean)
+            .map((tag) => [tag.toLocaleLowerCase("nl"), tag]),
+        ).values()];
         const calendarYear = new Date().getFullYear();
         $('#period-select option[value="year"]').textContent = `Dit jaar (${calendarYear})`;
         $('#period-select option[value="last-year"]').textContent = `Vorig jaar (${calendarYear - 1})`;
@@ -1353,7 +1372,7 @@
         }
 
         function hasTableFilters() {
-          return Boolean(currentGroupFilter || $("#search-input").value.trim() || $("#date-from").value || $("#date-to").value);
+          return Boolean(currentGroupFilter || currentTagFilter || $("#search-input").value.trim() || $("#date-from").value || $("#date-to").value);
         }
 
         function getFilteredTableEntries() {
@@ -1364,7 +1383,8 @@
           if (dateFrom && dateTo && dateFrom > dateTo) return [];
           const visibleEntries = periodEntries(currentView, true).filter((entry) => {
             if (currentGroupFilter && entry.group !== currentGroupFilter) return false;
-            if (!`${entry.title} ${entry.group} ${entry.note || ""}`.toLocaleLowerCase("nl").includes(query)) return false;
+            if (currentTagFilter && !(entry.tags || []).includes(currentTagFilter)) return false;
+            if (!`${entry.title} ${entry.group} ${(entry.tags || []).join(" ")} ${entry.note || ""}`.toLocaleLowerCase("nl").includes(query)) return false;
             if (dateFrom || dateTo) {
               if (!entry.date || (dateFrom && entry.date < dateFrom) || (dateTo && entry.date > dateTo)) return false;
             }
@@ -1383,6 +1403,9 @@
           const groupFilterButton = $("#clear-group-filter");
           groupFilterButton.hidden = !currentGroupFilter;
           groupFilterButton.textContent = currentGroupFilter ? `Categorie: ${currentGroupFilter} ×` : "";
+          const tagFilterButton = $("#clear-tag-filter");
+          tagFilterButton.hidden = !currentTagFilter;
+          tagFilterButton.textContent = currentTagFilter ? `Tag: ${currentTagFilter} ×` : "";
           $("#date-from").setAttribute("aria-invalid", String(invalidRange));
           $("#date-to").setAttribute("aria-invalid", String(invalidRange));
           const filtered = sortEntries(getFilteredTableEntries());
@@ -1420,12 +1443,13 @@
                   : `<td>${dateString(entry.date)}</td>`;
               const itemSubtitle = entry.hidden ? "Bedrag verborgen · uitgesloten van grafieken" : entry.importedFrom === "Belfius" ? "Belfius · bankafschrift" : entry.transferSource ? `Overgeboekt uit ${entry.transferSource}` : currentView === "loans" ? "Openstaand bedrag" : currentView === "investments" ? "Huidige marktwaarde" : "Eenmalig";
               const tagColor = groupColor(entry.group);
+              const entryTags = (entry.tags || []).map((tag) => `<button class="item-tag" type="button" data-action="filter-tag" data-tag="${escapeHTML(tag)}" aria-pressed="${currentTagFilter === tag}" aria-label="Filter op tag ${escapeHTML(tag)}" title="Filter op tag ${escapeHTML(tag)}">${escapeHTML(tag)}</button>`).join("");
               const transferButton = !entry.hidden && (currentView === "income" || currentView === "expenses")
                 ? `<button class="icon-button invest" data-action="invest" data-id="${escapeHTML(entry.id)}" aria-label="${escapeHTML(entry.title)} als investering boeken" title="Als investering boeken"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17.5 8.5 12l4 4L21 7.5"/><path d="M15 7.5h6v6"/></svg></button>`
                 : "";
               const visibilityButton = `<button class="icon-button visibility" data-action="visibility" data-id="${escapeHTML(entry.id)}" aria-label="${entry.hidden ? "Bedrag herstellen" : "Bedrag verbergen"}: ${escapeHTML(entry.title)}" title="${entry.hidden ? "Bedrag herstellen" : "Bedrag verbergen"}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${entry.hidden ? '<path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.7 10.7 0 0 1 12 5c5.5 0 9 7 9 7a14 14 0 0 1-2.1 2.9M6.2 6.2C4.1 7.6 3 12 3 12a14 14 0 0 0 4.3 4.8A8 8 0 0 0 12 19c1.1 0 2-.2 2.9-.6"/>' : '<path d="M2.5 12s3.2-7 9.5-7 9.5 7 9.5 7-3.2 7-9.5 7-9.5-7-9.5-7Z"/><circle cx="12" cy="12" r="2.5"/>'}</svg></button>`;
               return `<tr class="${entry.hidden ? "hidden-row" : ""}">
-                <td><div class="item-main">${escapeHTML(entry.title)}</div><div class="item-sub ${entry.hidden ? "item-sub-hidden" : ""}">${itemSubtitle}</div>${entry.note ? `<div class="item-note">${escapeHTML(entry.note)}</div>` : ""}</td>
+                <td><div class="item-main">${escapeHTML(entry.title)}</div><div class="item-sub ${entry.hidden ? "item-sub-hidden" : ""}">${itemSubtitle}</div>${entry.note ? `<div class="item-note">${escapeHTML(entry.note)}</div>` : ""}${entryTags ? `<div class="item-tags">${entryTags}</div>` : ""}</td>
                 <td><button class="tag tag-filter" type="button" data-action="filter-group" data-group="${escapeHTML(entry.group || "Overig")}" aria-pressed="${currentGroupFilter === (entry.group || "Overig")}" aria-label="Filter op categorie ${escapeHTML(entry.group || "Overig")}" title="Filter op ${escapeHTML(entry.group || "Overig")}" style="color:${tagColor};background:${tagColor}20"><span class="tag-dot" style="background:${tagColor}"></span>${escapeHTML(entry.group || "Overig")}</button></td>
                 ${extraCells}
                 <td class="amount ${entry.hidden ? "hidden-amount" : ""}">${entry.hidden ? "Verborgen" : tableMoney(entry.amount)}</td>
@@ -1524,6 +1548,7 @@
           fields += fieldMarkup("group", config.groupLabel, "select", groupOptionsFor(currentView, group), group);
           fields += fieldMarkup("amount", config.amountLabel, "number", [], amount, "0,00", false, true, "0.01");
           fields += fieldMarkup("date", config.dateLabel, dateType, [], date, "", false, dateRequired);
+          fields += `<div class="field full"><label for="tags">Tags (optioneel)</label><input id="tags" name="tags" type="text" maxlength="500" value="${escapeHTML((entry?.tags || []).join(", "))}" placeholder="Bijv. Vakantie, Zakelijk"><p class="field-hint">Scheid tags met komma’s. Tags zijn alleen labels en tellen bedragen niet extra mee.</p></div>`;
           if (currentView === "investments" || currentView === "loans") {
             fields += fieldMarkup("rate", currentView === "loans" ? "Rente (%)" : "Rendement (%)", "number", [], rate, "Bijv. 4,5", false, false, "0.01");
           }
@@ -1545,6 +1570,7 @@
             fieldMarkup("group", "Type investering", "select", groupOptionsFor("investments", "Overig"), "Overig") +
             fieldMarkup("amount", "Over te boeken bedrag", "number", [], entry.amount, "0,00", false, true, "0.01") +
             fieldMarkup("date", "Investeringsdatum", "date", [], entry.date || new Date().toISOString().slice(0, 10), "", false, true) +
+            `<div class="field full"><label for="tags">Tags (optioneel)</label><input id="tags" name="tags" type="text" maxlength="500" value="${escapeHTML((entry.tags || []).join(", "))}" placeholder="Bijv. Vakantie, Zakelijk"><p class="field-hint">Scheid tags met komma’s. Tags zijn alleen labels en tellen bedragen niet extra mee.</p></div>` +
             `<div class="field full"><label for="note">Notitie (optioneel)</label><textarea id="note" name="note" rows="3" placeholder="Voeg een opmerking toe">${escapeHTML(entry.note || "")}</textarea></div>`;
           $("#amount").max = (Math.round(Number(entry.amount) * 100) / 100).toFixed(2);
           $("#form-error").textContent = "";
@@ -1590,6 +1616,7 @@
             group,
             amount: amountCents / 100,
             date,
+            tags: parseTags(form.get("tags")),
             note: String(form.get("note") || "").trim(),
             transferSource: sourceView === "income" ? "inkomsten" : "uitgaven",
             sourceTransactionId: sourceId,
@@ -1618,6 +1645,7 @@
         document.querySelectorAll(".nav-item").forEach((button) => button.addEventListener("click", () => {
           currentView = button.dataset.view;
           currentGroupFilter = "";
+          currentTagFilter = "";
           $("#search-input").value = "";
           updatePage();
         }));
@@ -1703,6 +1731,10 @@
         });
         $("#clear-group-filter").addEventListener("click", () => {
           currentGroupFilter = "";
+          renderTable();
+        });
+        $("#clear-tag-filter").addEventListener("click", () => {
+          currentTagFilter = "";
           renderTable();
         });
         $("#date-from").addEventListener("change", renderTable);
@@ -1807,6 +1839,7 @@
             group: String(form.get("group")),
             amount,
             date: String(form.get("date") || ""),
+            tags: parseTags(form.get("tags")),
             note: String(form.get("note") || "").trim(),
           };
           const rateValue = form.get("rate");
@@ -1827,6 +1860,11 @@
           if (!button) return;
           if (button.dataset.action === "filter-group") {
             currentGroupFilter = button.dataset.group === currentGroupFilter ? "" : button.dataset.group;
+            renderTable();
+            return;
+          }
+          if (button.dataset.action === "filter-tag") {
+            currentTagFilter = button.dataset.tag === currentTagFilter ? "" : button.dataset.tag;
             renderTable();
             return;
           }
@@ -1916,6 +1954,7 @@
               throw new Error(`Het nieuwe projectbestand kon niet worden opgeslagen. Je huidige gegevens zijn behouden; back-up: ${backupPath}.`);
             }
             currentGroupFilter = "";
+            currentTagFilter = "";
             $("#search-input").value = "";
             $("#date-from").value = "";
             $("#date-to").value = "";
