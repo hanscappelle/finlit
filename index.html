@@ -204,7 +204,7 @@
       .breakdown-name { display: flex; min-width: 0; align-items: center; gap: 8px; color: #5e6a63; }
       .breakdown-name span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .category-filter { min-width: 0; padding: 0; border: 0; color: inherit; background: transparent; font-size: inherit; text-align: left; }
-      .category-filter:hover { color: var(--green); text-decoration: underline; text-underline-offset: 2px; }
+      .category-filter:hover, .category-filter[aria-pressed="true"] { color: var(--green); text-decoration: underline; text-underline-offset: 2px; }
       .breakdown-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--green); }
       .breakdown-value { color: #47564e; font-weight: 650; }
       .progress { grid-column: 1 / -1; height: 4px; margin-top: -6px; overflow: hidden; border-radius: 4px; background: #f0f2ef; }
@@ -219,6 +219,10 @@
       .group-filter { height: 39px; flex: 0 0 auto; padding: 0 10px; border: 1px solid #dce8df; border-radius: 7px; color: #42634f; background: #eef5ef; font-size: 10px; white-space: nowrap; }
       .group-filter:hover { background: #e4efe6; }
       .group-filter[hidden] { display: none; }
+      .tag-breakdown { margin-bottom: 18px; padding: 16px 19px; }
+      .tag-breakdown[hidden] { display: none; }
+      .tag-breakdown .panel-title { font-size: 13px; }
+      .tag-breakdown-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 0 24px; }
       .date-filter { display: flex; min-width: 0; flex-direction: column; gap: 4px; color: #89928c; font-size: 9px; }
       .date-filter input { width: 132px; min-width: 0; height: 39px; padding: 0 8px; border: 1px solid var(--line); border-radius: 7px; outline: none; color: #4d5953; background: var(--paper); font-size: 11px; }
       .date-filter input:focus { border-color: #87a795; box-shadow: 0 0 0 3px #e8f0ea; }
@@ -564,6 +568,11 @@
               <div class="breakdown" id="breakdown"></div>
             </section>
           </div>
+          <section class="panel tag-breakdown" id="tag-breakdown" aria-labelledby="tag-breakdown-title" hidden>
+            <h2 class="panel-title" id="tag-breakdown-title"></h2>
+            <p class="panel-note">Volgens de tabelfilters, zonder verborgen bedragen. Een transactie met meerdere tags telt mee bij elke tag.</p>
+            <div class="tag-breakdown-list" id="tag-breakdown-list"></div>
+          </section>
           <section class="panel table-panel" id="table-panel">
             <div class="table-toolbar">
               <div><h2 class="panel-title" id="table-title">Recente inkomsten</h2><p class="panel-note" id="table-note">Je inkomsten in de gekozen periode</p></div>
@@ -1492,7 +1501,7 @@
           const showHidden = $("#show-hidden").checked;
           if (dateFrom && dateTo && dateFrom > dateTo) return [];
           const visibleEntries = periodEntries(currentView, true).filter((entry) => {
-            if (currentGroupFilter && entry.group !== currentGroupFilter) return false;
+            if (currentGroupFilter && (entry.group || "Overig") !== currentGroupFilter) return false;
             if (currentTagFilter && !(entry.tags || []).includes(currentTagFilter)) return false;
             if (!`${entry.title} ${entry.group} ${(entry.tags || []).join(" ")} ${entry.note || ""}`.toLocaleLowerCase("nl").includes(query)) return false;
             if (dateFrom || dateTo) {
@@ -1501,6 +1510,28 @@
             return true;
           });
           return showHidden ? visibleEntries : visibleEntries.filter((entry) => !entry.hidden);
+        }
+
+        function renderTagBreakdown(entries) {
+          const section = $("#tag-breakdown");
+          section.hidden = !currentGroupFilter || (currentView !== "income" && currentView !== "expenses");
+          if (section.hidden) return;
+          $("#tag-breakdown-title").textContent = `${currentView === "income" ? "Inkomsten" : "Uitgaven"} per tag · ${currentGroupFilter}`;
+          const totals = new Map();
+          for (const entry of entries) {
+            if (entry.hidden) continue;
+            for (const tag of entry.tags || []) {
+              totals.set(tag, (totals.get(tag) || 0) + Number(entry.amount || 0));
+            }
+          }
+          const sorted = [...totals].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "nl"));
+          const max = sorted[0]?.[1] || 0;
+          $("#tag-breakdown-list").innerHTML = sorted.length ? sorted.map(([tag, value], index) => `
+            <div class="breakdown-row">
+              <div class="breakdown-name"><span class="breakdown-dot" style="background:${categoryColors[index % categoryColors.length]}"></span><button class="category-filter" type="button" data-tag-filter="${escapeHTML(tag)}" aria-pressed="${currentTagFilter === tag}" aria-label="Filter transacties op tag ${escapeHTML(tag)}">${escapeHTML(tag)}</button></div>
+              <span class="breakdown-value">${tableMoney(value)}</span>
+              <div class="progress"><span style="width:${max > 0 ? Math.max(2, value / max * 100) : 0}%;background:${categoryColors[index % categoryColors.length]}"></span></div>
+            </div>`).join("") : '<div class="no-breakdown">Geen tags voor de gefilterde transacties.</div>';
         }
 
         function renderTable() {
@@ -1519,6 +1550,7 @@
           $("#date-from").setAttribute("aria-invalid", String(invalidRange));
           $("#date-to").setAttribute("aria-invalid", String(invalidRange));
           const filtered = sortEntries(getFilteredTableEntries());
+          renderTagBreakdown(filtered);
           const groupTotalsForColors = groupTotals(periodEntries(currentView));
           const rankedGroups = Object.entries(groupTotalsForColors).sort((a, b) => b[1] - a[1]).slice(0, 5);
           const groupColors = new Map(rankedGroups.map(([group], index) => [group, categoryColors[index]]));
@@ -1592,6 +1624,11 @@
           $("#table-count").textContent = `${invalidRange ? "De startdatum valt na de einddatum" : `${filtered.length} ${filtered.length === 1 ? "regel" : "regels"}`}${currentPeriod() !== "all" && currentView !== "investments" && currentView !== "loans" ? ` · ${$("#period-select").selectedOptions[0].textContent.toLocaleLowerCase("nl")}` : ""}`;
           $("#table-total").textContent = tableMoney(sum(filtered.filter((entry) => !entry.hidden)));
           $("#table-total-note").textContent = filtered.some((entry) => entry.hidden) ? "verborgen bedragen niet meegerekend" : "";
+        }
+
+        function toggleTagFilter(tag) {
+          currentTagFilter = tag === currentTagFilter ? "" : tag;
+          renderTable();
         }
 
         function sortHeader(label, key) {
@@ -1764,7 +1801,15 @@
           if (!button) return;
           currentGroupFilter = button.dataset.categoryFilter;
           renderTable();
-          $("#table-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          (currentView === "income" || currentView === "expenses" ? $("#tag-breakdown") : $("#table-panel")).scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        $("#tag-breakdown-list").addEventListener("click", (event) => {
+          const button = event.target.closest("button[data-tag-filter]");
+          if (!button) return;
+          const tag = button.dataset.tagFilter;
+          toggleTagFilter(tag);
+          [...$("#tag-breakdown-list").querySelectorAll("button[data-tag-filter]")]
+            .find((item) => item.dataset.tagFilter === tag)?.focus();
         });
         $("#settings-grid").addEventListener("submit", async (event) => {
           const form = event.target.closest("form[data-add-view]");
@@ -1978,8 +2023,7 @@
             return;
           }
           if (button.dataset.action === "filter-tag") {
-            currentTagFilter = button.dataset.tag === currentTagFilter ? "" : button.dataset.tag;
-            renderTable();
+            toggleTagFilter(button.dataset.tag);
             return;
           }
           const entry = data[currentView].find((item) => item.id === button.dataset.id);
