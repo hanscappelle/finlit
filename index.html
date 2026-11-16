@@ -163,6 +163,8 @@
       .metric-icon.orange { color: #b9733e; background: var(--orange-soft); }
       .metric-icon.blue { color: #54758d; background: var(--blue-soft); }
       .metric-icon.red { color: #ad645c; background: #f8ecea; }
+      .forecast-lines { display: flex; flex-direction: column; gap: 2px; font-size: 18px; line-height: 1.2; }
+      .forecast-lines small { color: #89928c; font-family: system-ui, sans-serif; font-size: 10px; letter-spacing: 0; }
       .metric-value { margin-top: 13px; font-family: Georgia, "Times New Roman", serif; font-size: 25px; letter-spacing: -.45px; white-space: nowrap; }
       .metric-foot { margin-top: 5px; color: #929b95; font-size: 10px; }
       .metric-foot.positive { color: #56866a; }
@@ -178,6 +180,11 @@
       .legend[hidden] { display: none; }
       .legend span { display: inline-flex; align-items: center; gap: 5px; }
       .legend i { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+      .bar.forecast { width: min(14px, 20%); background: var(--green); }
+      .bar.forecast-2 { opacity: .65; }
+      .bar.forecast-4 { opacity: .45; }
+      .bar.forecast-8 { opacity: .28; }
+      .legend .legend-forecast { opacity: .4; }
       .legend .legend-orange { background: var(--orange); }
       .chart { display: flex; min-height: 190px; flex: 1; align-items: stretch; gap: 12px; padding: 9px 20px 14px; }
       .chart-month { display: flex; min-width: 0; flex: 1; flex-direction: column; justify-content: flex-end; align-items: center; gap: 9px; color: #89928c; font-size: 9px; }
@@ -217,6 +224,10 @@
       .breakdown-value { color: #47564e; font-weight: 650; }
       .progress { grid-column: 1 / -1; height: 4px; margin-top: -6px; overflow: hidden; border-radius: 4px; background: #f0f2ef; }
       .progress span { display: block; height: 100%; border-radius: inherit; background: #8eaf98; }
+      .pie-wrap { display: flex; justify-content: center; padding: 6px 0 4px; }
+      .pie { width: 132px; height: 132px; border-radius: 50%; }
+      .pie-wrap + .breakdown-row { margin-top: 9px; }
+      .breakdown-percent { margin-left: 6px; color: #89928c; font-weight: 500; }
       .no-breakdown { padding: 20px 0; color: #969f99; font-size: 11px; }
 
       .table-panel { margin-top: 0; }
@@ -257,7 +268,7 @@
       td { padding: 13px 19px; border-top: 1px solid #f0f2ef; color: #657069; font-size: 11px; white-space: nowrap; }
       tbody tr:hover { background: #fcfdfc; }
       .item-main { color: #34443b; font-size: 11px; font-weight: 650; }
-      .item-sub { margin-top: 3px; color: #9aa29d; font-size: 10px; }
+      .item-sub { margin-top: 3px; color: #9aa29d; font-size: 10px; white-space: normal; overflow-wrap: anywhere; line-height: 1.45; }
       .item-sub-hidden { color: #ad7a4d; }
       .item-main { width: 100%; overflow-wrap: break-word; white-space: normal; }
       .item-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
@@ -591,6 +602,9 @@
             <span>Je bekijkt voorbeelddata. Vervang deze door je eigen gegevens wanneer je klaar bent.</span>
             <button type="button" id="clear-demo">Voorbeelddata wissen</button>
           </div>
+          <div class="demo-banner" id="investment-disclaimer" role="note" hidden>
+            <span><strong>Let op:</strong> bedragen zijn momentopnamen en prognoses* zijn slechts schattingen op basis van je eigen aannames. Ze bieden geen garantie voor toekomstige resultaten en vormen geen beleggingsadvies. <br>* Prognose: investeringen zonder verwacht rendement tellen mee met hun huidige waarde.</span>
+          </div>
           <div class="import-notice" id="import-notice" role="status" aria-live="polite" hidden></div>
           <section class="metrics" id="metrics" aria-label="Kerncijfers"></section>
           <div class="lower-grid">
@@ -607,6 +621,7 @@
                     </select>
                     <button class="comparison-arrow" id="comparison-next" type="button" aria-label="Vergelijk met latere periode" title="Latere periode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
                   </div>
+                  <div class="legend" id="forecast-legend" hidden><span><i></i>Huidige waarde</span><span><i class="legend-forecast"></i>Prognose (2, 4 en 8 jaar)</span></div>
                   <div class="legend" id="chart-legend"><span><i></i>Inkomsten</span><span><i class="legend-orange"></i>Uitgaven</span></div>
                 </div>
               </div>
@@ -762,8 +777,8 @@
           investments: {
             title: "Investeringen", subtitle: "Je beleggingsposities.", add: "Investering toevoegen", singular: "Investering",
             chartTitle: "Waarde per investering", chartNote: "Huidige waarde van je posities", breakdownTitle: "Verdeling per type", tableTitle: "Jouw investeringen", tableNote: "Huidige waarde van je posities",
-            groupLabel: "Type", groupPlaceholder: "Bijv. ETF", groupOptions: ["ETF", "Aandelen", "Crypto", "Obligaties", "Vastgoed", "Overig"], amountLabel: "Huidige waarde", dateLabel: "Aankoopdatum (optioneel)", amountHeader: "Waarde",
-            metrics: ["Totale waarde", "Gemiddeld rendement", "Aantal posities", "Hoogste positie"],
+            groupLabel: "Type", groupPlaceholder: "Bijv. ETF", groupOptions: ["ETF", "Aandelen", "Crypto", "Obligaties", "Vastgoed", "Spaargeld", "Overig"], amountLabel: "Huidige waarde", dateLabel: "Aankoopdatum (optioneel)", amountHeader: "Waarde",
+            metrics: ["Totale waarde", "Gemiddeld rendement", "Aantal posities", "Totale prognose*"],
           },
           loans: {
             title: "Leningen", subtitle: "Je openstaande leningen.", add: "Lening toevoegen", singular: "Lening",
@@ -1460,11 +1475,13 @@
           $("#table-note").textContent = config.tableNote;
           const comparingCashflow = currentView === "income" || currentView === "expenses";
           $("#chart-legend").hidden = !comparingCashflow;
+          $("#forecast-legend").hidden = currentView !== "investments" || !data.investments.some((entry) => !entry.hidden && hasForecast(entry));
           $("#comparison-navigation").hidden = !comparingCashflow;
           $("#comparison-summary").hidden = !comparingCashflow;
           $("#period-select").disabled = currentView === "investments" || currentView === "loans";
           $("#period-select").style.opacity = $("#period-select").disabled ? ".55" : "1";
           $("#demo-banner").hidden = !data.demo;
+          $("#investment-disclaimer").hidden = currentView !== "investments";
           renderMetrics();
           renderChart();
           renderBreakdown();
@@ -1715,22 +1732,24 @@
             return;
           }
           if (currentView === "investments") {
-            const averageReturn = count ? selected.reduce((value, entry) => value + Number(entry.rate || 0), 0) / count : 0;
-            const biggest = [...selected].sort((a, b) => Number(b.amount) - Number(a.amount))[0];
+            const withReturn = selected.filter((entry) => entry.rate !== "" && entry.rate != null && Number.isFinite(Number(entry.rate)));
+            const averageReturn = withReturn.length ? withReturn.reduce((value, entry) => value + Number(entry.rate), 0) / withReturn.length : null;
+            const forecastTotal = (years) => selected.reduce((value, entry) => value + (hasForecast(entry) ? forecastValue(entry, years) : Number(entry.amount || 0)), 0);
             card.innerHTML =
               metricMarkup(configs[currentView].metrics[0], money(total), "Huidige waarde van je posities", "money", "green") +
-              metricMarkup(configs[currentView].metrics[1], `${averageReturn.toLocaleString("nl-NL", { maximumFractionDigits: 1 })}%`, "Gemiddeld opgegeven rendement", "percent", "blue", averageReturn >= 0 ? "positive" : "negative") +
+              metricMarkup(configs[currentView].metrics[1], averageReturn === null ? "—" : `${averageReturn.toLocaleString("nl-NL", { maximumFractionDigits: 1 })}%`, averageReturn === null ? "Geen rendement opgegeven" : "Gemiddeld opgegeven rendement", "percent", "blue", averageReturn !== null && averageReturn < 0 ? "negative" : "positive") +
               metricMarkup(configs[currentView].metrics[2], String(count), "Verschillende posities", "chart", "orange") +
-              metricMarkup(configs[currentView].metrics[3], biggest ? escapeHTML(biggest.title) : "—", biggest ? money(biggest.amount) : "Nog geen gegevens", "wallet", "green");
+              metricMarkup(configs[currentView].metrics[3], selected.some(hasForecast) ? `<span class="forecast-lines"><span>${money(forecastTotal(4))} <small>over 4 jaar</small></span><span>${money(forecastTotal(8))} <small>over 8 jaar</small></span></span>` : "—", selected.some(hasForecast) ? "" : "Geef een verwacht rendement op", "wallet", "green");
             return;
           }
-          const averageRate = count ? selected.reduce((value, entry) => value + Number(entry.rate || 0), 0) / count : 0;
+          const withRate = selected.filter((entry) => entry.rate !== "" && entry.rate != null && Number.isFinite(Number(entry.rate)));
+          const averageRate = withRate.length ? withRate.reduce((value, entry) => value + Number(entry.rate), 0) / withRate.length : null;
           const today = new Date();
           today.setHours(0, 0, 0, 0);
           const nextDue = selected.map((entry) => entry.date).filter((date) => date && parseDate(date) >= today).sort()[0];
           card.innerHTML =
             metricMarkup(configs[currentView].metrics[0], money(total), "Totaal van openstaande bedragen", "money", "red") +
-            metricMarkup(configs[currentView].metrics[1], `${averageRate.toLocaleString("nl-NL", { maximumFractionDigits: 3 })}%`, "Gemiddelde rente per jaar", "percent", "orange") +
+            metricMarkup(configs[currentView].metrics[1], averageRate === null ? "—" : `${averageRate.toLocaleString("nl-NL", { maximumFractionDigits: 3 })}%`, averageRate === null ? "Geen rente opgegeven" : "Gemiddelde rente per jaar", "percent", "orange") +
             metricMarkup(configs[currentView].metrics[2], String(count), "Actieve leningen", "chart", "blue") +
             metricMarkup(configs[currentView].metrics[3], nextDue ? dateString(nextDue) : "Niet opgegeven", nextDue ? "Eerstvolgende einddatum" : "Geen einddatum geregistreerd", "calendar", "green");
         }
@@ -1779,13 +1798,20 @@
           }
           chart.classList.remove("loan-chart");
           const entries = latestItems(data[currentView].filter((entry) => !entry.hidden));
-          const max = Math.max(...entries.map((entry) => Number(entry.amount || 0)), 1);
+          const forecastYears = [2, 4, 8];
+          const forecastsFor = (entry) => currentView === "investments" && hasForecast(entry) ? forecastYears.map((years) => ({ years, value: forecastValue(entry, years) })) : [];
+          const max = Math.max(...entries.slice(0, 6).flatMap((entry) => [Number(entry.amount || 0), ...forecastsFor(entry).map((item) => item.value)]), 1);
           chart.classList.toggle("empty-chart", !entries.length);
           if (!entries.length) {
             chart.innerHTML = `Voeg ${currentView === "loans" ? "een lening" : "een investering"} toe om je overzicht te zien.`;
             return;
           }
-          chart.innerHTML = entries.slice(0, 6).map((entry) => `<div class="chart-month"><div class="bar-pair" title="${escapeHTML(entry.title)}: ${money(entry.amount)}"><span class="bar" style="height:${Math.max(3, Number(entry.amount || 0) / max * 100)}%"></span></div><span>${escapeHTML(entry.title.length > 10 ? entry.title.slice(0, 9) + "…" : entry.title)}</span></div>`).join("");
+          chart.innerHTML = entries.slice(0, 6).map((entry) => {
+            const forecasts = forecastsFor(entry);
+            const tip = `${entry.title}: ${money(entry.amount)}${forecasts.map((item) => ` · prognose ${item.years} jaar: ${money(item.value)}`).join("")}`;
+            const forecastBars = forecasts.map((item) => `<span class="bar forecast forecast-${item.years}" style="height:${Math.max(3, Math.max(0, item.value) / max * 100)}%"></span>`).join("");
+            return `<div class="chart-month"><div class="bar-pair" title="${escapeHTML(tip)}"><span class="bar" style="height:${Math.max(3, Number(entry.amount || 0) / max * 100)}%"></span>${forecastBars}</div><span>${escapeHTML(entry.title.length > 10 ? entry.title.slice(0, 9) + "…" : entry.title)}</span></div>`;
+          }).join("");
         }
 
         function renderBreakdown() {
@@ -1793,12 +1819,27 @@
           const totals = groupTotals(entries);
           const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]).slice(0, 10);
           const max = sorted[0]?.[1] || 0;
-          $("#breakdown").innerHTML = sorted.length ? sorted.map(([name, value], index) => `
+          const showShare = currentView === "investments";
+          const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
+          const percentOf = (value) => grandTotal > 0 ? `${(value / grandTotal * 100).toLocaleString("nl-NL", { maximumFractionDigits: 1 })}%` : "0%";
+          let pie = "";
+          if (showShare && grandTotal > 0 && sorted.length) {
+            let angle = 0;
+            const stops = sorted.map(([, value], index) => {
+              const start = angle;
+              angle += value / grandTotal * 360;
+              return `${categoryColors[index % categoryColors.length]} ${start}deg ${angle}deg`;
+            });
+            if (angle < 359.9) stops.push(`#d9ded9 ${angle}deg 360deg`);
+            const label = sorted.map(([name, value]) => `${name} ${percentOf(value)}`).join(", ");
+            pie = `<div class="pie-wrap"><div class="pie" role="img" aria-label="Verdeling per type: ${escapeHTML(label)}" style="background:conic-gradient(${stops.join(",")})"></div></div>`;
+          }
+          $("#breakdown").innerHTML = pie + (sorted.length ? sorted.map(([name, value], index) => `
             <div class="breakdown-row">
               <div class="breakdown-name"><span class="breakdown-dot" style="background:${categoryColors[index % categoryColors.length]}"></span><button class="category-filter" type="button" data-category-filter="${escapeHTML(name)}" aria-label="Filter transacties op categorie ${escapeHTML(name)}">${escapeHTML(name)}</button></div>
-              <span class="breakdown-value">${money(value)}</span>
+              <span class="breakdown-value">${money(value)}${showShare ? `<span class="breakdown-percent">${percentOf(value)}</span>` : ""}</span>
               <div class="progress"><span style="width:${Math.max(2, value / max * 100)}%;background:${categoryColors[index % categoryColors.length]}"></span></div>
-            </div>`).join("") : '<div class="no-breakdown">Nog geen gegevens in deze periode.</div>';
+            </div>`).join("") : '<div class="no-breakdown">Nog geen gegevens in deze periode.</div>');
         }
 
         function hasTableFilters() {
@@ -1911,7 +1952,7 @@
                 : currentView === "investments"
                   ? `<td>${entry.date ? dateString(entry.date) : "—"}</td><td>${entry.rate === "" || entry.rate == null ? "—" : `<span class="${Number(entry.rate) >= 0 ? "positive" : "negative"}">${Number(entry.rate) > 0 ? "+" : ""}${Number(entry.rate).toLocaleString("nl-NL")}%</span>`}</td>`
                   : `<td>${dateString(entry.date)}</td>`;
-              const itemSubtitle = entry.hidden ? "Bedrag verborgen · uitgesloten van grafieken" : entry.importedFrom === "Belfius" ? "Belfius · bankafschrift" : entry.transferSource ? `Overgeboekt uit ${entry.transferSource}` : currentView === "loans" ? ["Openstaand bedrag", entry.monthlyPayment ? `${tableMoney(entry.monthlyPayment)} per maand` : "", entry.residual ? `restbedrag ${tableMoney(entry.residual)}` : ""].filter(Boolean).join(" · ") : currentView === "investments" ? "Huidige marktwaarde" : "Eenmalig";
+              const itemSubtitle = entry.hidden ? "Bedrag verborgen · uitgesloten van grafieken" : entry.importedFrom === "Belfius" ? "Belfius · bankafschrift" : entry.transferSource ? `Overgeboekt uit ${entry.transferSource}` : currentView === "loans" ? ["Openstaand bedrag", entry.monthlyPayment ? `${tableMoney(entry.monthlyPayment)} per maand` : "", entry.residual ? `restbedrag ${tableMoney(entry.residual)}` : ""].filter(Boolean).join(" · ") : currentView === "investments" ? (hasForecast(entry) ? `Prognose: ${[2, 4, 8].map((years) => `${tableMoney(forecastValue(entry, years))} (${years} jr)`).join(" · ")}` : "Huidige marktwaarde") : "Eenmalig";
               const tagColor = groupColor(entry.group);
               const entryTags = (entry.tags || []).map((tag) => `<button class="item-tag" type="button" data-action="filter-tag" data-tag="${escapeHTML(tag)}" aria-pressed="${currentTagFilter === tag}" aria-label="Filter op tag ${escapeHTML(tag)}" title="Filter op tag ${escapeHTML(tag)}">${escapeHTML(tag)}</button>`).join("");
               const transferButton = !entry.hidden && (currentView === "income" || currentView === "expenses")
@@ -2028,6 +2069,11 @@
           if (currentView === "investments" || currentView === "loans") {
             fields += fieldMarkup("rate", currentView === "loans" ? "Rente (%)" : "Rendement (%)", "number", [], rate, "Bijv. 4,525", false, false, "0.001");
           }
+          if (currentView === "investments") {
+            fields += fieldMarkup("forecastRate", "Prognose: verwacht rendement per jaar (%) (optioneel)", "number", [], entry?.forecastRate ?? "", "Bijv. 6", false, false, "0.001");
+            fields += fieldMarkup("monthlyContribution", "Maandelijkse inleg voor prognose (optioneel)", "number", [], entry?.monthlyContribution ?? "", "0,00", false, false, "0.01");
+            fields += '<p class="field-hint" style="grid-column:1/-1">Vul een verwacht rendement in om voor deze investering een prognose te zien. Het is een schatting, geen garantie.</p>';
+          }
           if (currentView === "loans") {
             fields = fields.replace(/(<input id="rate"[^>]*>)<\/div>/, '$1<p class="field-hint" id="rate-hint"></p></div>');
             fields += fieldMarkup("startDate", "Begindatum (optioneel)", "date", [], entry?.startDate ?? "", "", false, false);
@@ -2041,6 +2087,18 @@
           $("#form-error").textContent = "";
           $("#modal-backdrop").hidden = false;
           $("#title").focus();
+        }
+        function forecastValue(entry, years) {
+          const annual = Number(entry.forecastRate) / 100;
+          const monthly = Number(entry.monthlyContribution) || 0;
+          const months = years * 12;
+          const i = (1 + annual) ** (1 / 12) - 1;
+          const amount = Number(entry.amount) || 0;
+          if (Math.abs(i) < 1e-12) return amount + monthly * months;
+          return amount * (1 + i) ** months + monthly * ((1 + i) ** months - 1) / i;
+        }
+        function hasForecast(entry) {
+          return entry.forecastRate !== undefined && entry.forecastRate !== "" && Number.isFinite(Number(entry.forecastRate));
         }
         function impliedLoanRate(initial, monthly, residual, startDate, endDate) {
           if (!(initial > 0) || !(monthly > 0) || !startDate || !endDate) return null;
@@ -2439,6 +2497,14 @@
           const rateValue = form.get("rate");
           if (rateValue !== null && rateValue !== "") entry.rate = Math.round(Number(rateValue) * 1000) / 1000;
           else if (rateValue !== null) delete entry.rate;
+          if (currentView === "investments") {
+            const forecastRate = form.get("forecastRate");
+            if (forecastRate !== null && forecastRate !== "" && Number.isFinite(Number(forecastRate))) entry.forecastRate = Math.round(Number(forecastRate) * 1000) / 1000;
+            else delete entry.forecastRate;
+            const contribution = form.get("monthlyContribution");
+            if (contribution !== null && contribution !== "" && Number(contribution) > 0) entry.monthlyContribution = Number(contribution);
+            else delete entry.monthlyContribution;
+          }
           if (currentView === "loans") {
             const startDate = String(form.get("startDate") || "");
             if (startDate) entry.startDate = startDate;
