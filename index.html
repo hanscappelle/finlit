@@ -762,7 +762,7 @@
           investments: {
             title: "Investeringen", subtitle: "Je beleggingsposities.", add: "Investering toevoegen", singular: "Investering",
             chartTitle: "Waarde per investering", chartNote: "Huidige waarde van je posities", breakdownTitle: "Verdeling per type", tableTitle: "Jouw investeringen", tableNote: "Huidige waarde van je posities",
-            groupLabel: "Type", groupPlaceholder: "Bijv. ETF", groupOptions: ["ETF", "Aandelen", "Crypto", "Obligaties", "Vastgoed", "Overig"], amountLabel: "Huidige waarde", dateLabel: "Aankoopdatum", amountHeader: "Waarde",
+            groupLabel: "Type", groupPlaceholder: "Bijv. ETF", groupOptions: ["ETF", "Aandelen", "Crypto", "Obligaties", "Vastgoed", "Overig"], amountLabel: "Huidige waarde", dateLabel: "Aankoopdatum (optioneel)", amountHeader: "Waarde",
             metrics: ["Totale waarde", "Gemiddeld rendement", "Aantal posities", "Hoogste positie"],
           },
           loans: {
@@ -1909,7 +1909,7 @@
               const extraCells = currentView === "loans"
                 ? `<td>${entry.rate === "" || entry.rate == null ? "—" : `${Number(entry.rate).toLocaleString("nl-NL")}%`}</td><td>${entry.date ? dateString(entry.date) : "—"}</td>`
                 : currentView === "investments"
-                  ? `<td>${dateString(entry.date)}</td><td>${entry.rate === "" || entry.rate == null ? "—" : `<span class="${Number(entry.rate) >= 0 ? "positive" : "negative"}">${Number(entry.rate) > 0 ? "+" : ""}${Number(entry.rate).toLocaleString("nl-NL")}%</span>`}</td>`
+                  ? `<td>${entry.date ? dateString(entry.date) : "—"}</td><td>${entry.rate === "" || entry.rate == null ? "—" : `<span class="${Number(entry.rate) >= 0 ? "positive" : "negative"}">${Number(entry.rate) > 0 ? "+" : ""}${Number(entry.rate).toLocaleString("nl-NL")}%</span>`}</td>`
                   : `<td>${dateString(entry.date)}</td>`;
               const itemSubtitle = entry.hidden ? "Bedrag verborgen · uitgesloten van grafieken" : entry.importedFrom === "Belfius" ? "Belfius · bankafschrift" : entry.transferSource ? `Overgeboekt uit ${entry.transferSource}` : currentView === "loans" ? ["Openstaand bedrag", entry.monthlyPayment ? `${tableMoney(entry.monthlyPayment)} per maand` : "", entry.residual ? `restbedrag ${tableMoney(entry.residual)}` : ""].filter(Boolean).join(" · ") : currentView === "investments" ? "Huidige marktwaarde" : "Eenmalig";
               const tagColor = groupColor(entry.group);
@@ -2019,7 +2019,7 @@
           const rate = entry?.rate ?? "";
           const titleLabel = currentView === "loans" ? "Naam lening" : currentView === "investments" ? "Naam investering" : "Omschrijving";
           const dateType = currentView === "loans" ? "date" : "date";
-          const dateRequired = currentView !== "loans";
+          const dateRequired = currentView !== "loans" && currentView !== "investments";
           let fields = fieldMarkup("title", titleLabel, "text", [], title, currentView === "loans" ? "Bijv. Studieschuld" : currentView === "investments" ? "Bijv. Wereld ETF" : currentView === "income" ? "Bijv. Salaris" : "Bijv. Huur", true);
           fields += fieldMarkup("group", config.groupLabel, "select", groupOptionsFor(currentView, group), group);
           fields += fieldMarkup("amount", config.amountLabel, "number", [], amount, "0,00", false, true, "0.01");
@@ -2438,6 +2438,7 @@
           };
           const rateValue = form.get("rate");
           if (rateValue !== null && rateValue !== "") entry.rate = Math.round(Number(rateValue) * 1000) / 1000;
+          else if (rateValue !== null) delete entry.rate;
           if (currentView === "loans") {
             const startDate = String(form.get("startDate") || "");
             if (startDate) entry.startDate = startDate;
