@@ -199,6 +199,13 @@
       .comparison-arrow:disabled { opacity: .4; cursor: default; }
       .comparison-arrow svg { width: 14px; height: 14px; }
       .comparison-summary[hidden], .comparison-navigation[hidden] { display: none; }
+      .chart.loan-chart { flex-direction: column; justify-content: center; gap: 11px; max-height: 260px; overflow-y: auto; }
+      .loan-bar-row { display: grid; grid-template-columns: minmax(70px, 28%) 1fr auto; align-items: center; gap: 10px; font-size: 11px; color: #5f6a64; }
+      .loan-bar-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .loan-bar-track { position: relative; height: 12px; border-radius: 6px; background: rgba(137, 146, 140, .18); overflow: hidden; }
+      .loan-bar-fill { display: block; height: 100%; border-radius: 6px; background: #e6a16c; transition: width .25s ease; }
+      .loan-bar-value { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+      .loan-bar-value small { display: block; color: #89928c; font-size: 9px; }
       .chart.empty-chart { align-items: center; justify-content: center; color: #949d97; font-size: 12px; }
       .breakdown { padding: 0 19px 16px; }
       .breakdown-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; margin-top: 13px; font-size: 11px; }
@@ -1723,7 +1730,7 @@
           const nextDue = selected.map((entry) => entry.date).filter((date) => date && parseDate(date) >= today).sort()[0];
           card.innerHTML =
             metricMarkup(configs[currentView].metrics[0], money(total), "Totaal van openstaande bedragen", "money", "red") +
-            metricMarkup(configs[currentView].metrics[1], `${averageRate.toLocaleString("nl-NL", { maximumFractionDigits: 2 })}%`, "Gemiddelde rente per jaar", "percent", "orange") +
+            metricMarkup(configs[currentView].metrics[1], `${averageRate.toLocaleString("nl-NL", { maximumFractionDigits: 3 })}%`, "Gemiddelde rente per jaar", "percent", "orange") +
             metricMarkup(configs[currentView].metrics[2], String(count), "Actieve leningen", "chart", "blue") +
             metricMarkup(configs[currentView].metrics[3], nextDue ? dateString(nextDue) : "Niet opgegeven", nextDue ? "Eerstvolgende einddatum" : "Geen einddatum geregistreerd", "calendar", "green");
         }
@@ -1732,6 +1739,7 @@
           const chart = $("#chart");
           if (currentView === "income" || currentView === "expenses") {
             renderComparisonSummary();
+            chart.classList.remove("loan-chart");
             const months = [];
             for (let i = 5; i >= 0; i--) {
               const date = new Date();
@@ -1750,6 +1758,26 @@
             chart.innerHTML = months.map((month, i) => `<div class="chart-month"><div class="bar-pair" title="${month.label}: ${money(incomes[i])} inkomsten, ${money(expenses[i])} uitgaven"><span class="bar" style="height:${Math.max(3, incomes[i] / max * 100)}%"></span><span class="bar expense" style="height:${Math.max(3, expenses[i] / max * 100)}%"></span></div><span>${escapeHTML(month.label)}</span></div>`).join("");
             return;
           }
+          if (currentView === "loans") {
+            const loans = data.loans.filter((entry) => !entry.hidden && Number(entry.amount) > 0).sort((a, b) => Number(b.amount) - Number(a.amount));
+            chart.classList.toggle("empty-chart", !loans.length);
+            chart.classList.toggle("loan-chart", loans.length > 0);
+            if (!loans.length) {
+              chart.innerHTML = "Voeg een lening toe om je overzicht te zien.";
+              return;
+            }
+            // De balk is relatief aan het initiële bedrag (indien bekend); anders aan de grootste lening.
+            const scale = Math.max(...loans.map((entry) => Math.max(Number(entry.amount), Number(entry.initialAmount) || 0)));
+            chart.innerHTML = loans.map((entry) => {
+              const amount = Number(entry.amount);
+              const initial = Number(entry.initialAmount) || 0;
+              const repaid = initial > amount ? Math.round((initial - amount) / initial * 100) : null;
+              const tip = `${entry.title}: ${money(amount)} openstaand${initial ? ` van ${money(initial)}` : ""}${repaid !== null ? ` (${repaid}% afgelost)` : ""}`;
+              return `<div class="loan-bar-row" title="${escapeHTML(tip)}"><span class="loan-bar-name">${escapeHTML(entry.title)}</span><span class="loan-bar-track"><span class="loan-bar-fill" style="width:${Math.max(2, amount / scale * 100)}%"></span></span><span class="loan-bar-value">${money(amount)}${repaid !== null ? `<small>${repaid}% afgelost</small>` : ""}</span></div>`;
+            }).join("");
+            return;
+          }
+          chart.classList.remove("loan-chart");
           const entries = latestItems(data[currentView].filter((entry) => !entry.hidden));
           const max = Math.max(...entries.map((entry) => Number(entry.amount || 0)), 1);
           chart.classList.toggle("empty-chart", !entries.length);
@@ -1883,7 +1911,7 @@
                 : currentView === "investments"
                   ? `<td>${dateString(entry.date)}</td><td>${entry.rate === "" || entry.rate == null ? "—" : `<span class="${Number(entry.rate) >= 0 ? "positive" : "negative"}">${Number(entry.rate) > 0 ? "+" : ""}${Number(entry.rate).toLocaleString("nl-NL")}%</span>`}</td>`
                   : `<td>${dateString(entry.date)}</td>`;
-              const itemSubtitle = entry.hidden ? "Bedrag verborgen · uitgesloten van grafieken" : entry.importedFrom === "Belfius" ? "Belfius · bankafschrift" : entry.transferSource ? `Overgeboekt uit ${entry.transferSource}` : currentView === "loans" ? "Openstaand bedrag" : currentView === "investments" ? "Huidige marktwaarde" : "Eenmalig";
+              const itemSubtitle = entry.hidden ? "Bedrag verborgen · uitgesloten van grafieken" : entry.importedFrom === "Belfius" ? "Belfius · bankafschrift" : entry.transferSource ? `Overgeboekt uit ${entry.transferSource}` : currentView === "loans" ? ["Openstaand bedrag", entry.monthlyPayment ? `${tableMoney(entry.monthlyPayment)} per maand` : "", entry.residual ? `restbedrag ${tableMoney(entry.residual)}` : ""].filter(Boolean).join(" · ") : currentView === "investments" ? "Huidige marktwaarde" : "Eenmalig";
               const tagColor = groupColor(entry.group);
               const entryTags = (entry.tags || []).map((tag) => `<button class="item-tag" type="button" data-action="filter-tag" data-tag="${escapeHTML(tag)}" aria-pressed="${currentTagFilter === tag}" aria-label="Filter op tag ${escapeHTML(tag)}" title="Filter op tag ${escapeHTML(tag)}">${escapeHTML(tag)}</button>`).join("");
               const transferButton = !entry.hidden && (currentView === "income" || currentView === "expenses")
@@ -1982,7 +2010,7 @@
           activeEditId = entry?.id || null;
           const config = configs[currentView];
           $("#modal-title").textContent = `${activeEditId ? "Bewerk" : "Voeg toe"}: ${config.singular.toLocaleLowerCase("nl")}`;
-          $("#modal-subtitle").textContent = currentView === "investments" ? "De waarde en het rendement van deze positie." : currentView === "loans" ? "Het openstaande bedrag en de rente van je lening." : "Vul de gegevens hieronder in.";
+          $("#modal-subtitle").textContent = currentView === "investments" ? "De waarde en het rendement van deze positie." : currentView === "loans" ? "Het openstaande bedrag, de rente, de maandelijkse aflossing en een eventueel restbedrag." : "Vul de gegevens hieronder in.";
           $("#save-button").textContent = activeEditId ? "Wijzigingen opslaan" : "Opslaan";
           const title = entry?.title || "";
           const group = entry?.group || "";
@@ -1998,13 +2026,59 @@
           fields += fieldMarkup("date", config.dateLabel, dateType, [], date, "", false, dateRequired);
           fields += `<div class="field full"><label for="tags">Tags (optioneel)</label><input id="tags" name="tags" type="text" maxlength="500" value="${escapeHTML((entry?.tags || []).join(", "))}" placeholder="Bijv. Vakantie, Zakelijk"><p class="field-hint">Scheid tags met komma’s. Tags zijn alleen labels en tellen bedragen niet extra mee.</p></div>`;
           if (currentView === "investments" || currentView === "loans") {
-            fields += fieldMarkup("rate", currentView === "loans" ? "Rente (%)" : "Rendement (%)", "number", [], rate, "Bijv. 4,5", false, false, "0.01");
+            fields += fieldMarkup("rate", currentView === "loans" ? "Rente (%)" : "Rendement (%)", "number", [], rate, "Bijv. 4,525", false, false, "0.001");
+          }
+          if (currentView === "loans") {
+            fields = fields.replace(/(<input id="rate"[^>]*>)<\/div>/, '$1<p class="field-hint" id="rate-hint"></p></div>');
+            fields += fieldMarkup("startDate", "Begindatum (optioneel)", "date", [], entry?.startDate ?? "", "", false, false);
+            fields += fieldMarkup("initialAmount", "Initieel geleend bedrag (optioneel)", "number", [], entry?.initialAmount ?? "", "0,00", false, false, "0.01");
+            fields += fieldMarkup("monthlyPayment", "Maandelijks af te lossen bedrag (optioneel)", "number", [], entry?.monthlyPayment ?? "", "0,00", false, false, "0.01");
+            fields += fieldMarkup("residual", "Restbedrag (optioneel)", "number", [], entry?.residual ?? "", "0,00", false, false, "0.01");
           }
           fields += `<div class="field full"><label for="note">Notitie (optioneel)</label><textarea id="note" name="note" rows="3" placeholder="Voeg een opmerking toe">${escapeHTML(entry?.note || "")}</textarea></div>`;
           $("#form-fields").innerHTML = fields;
+          if (currentView === "loans") updateSuggestedRate();
           $("#form-error").textContent = "";
           $("#modal-backdrop").hidden = false;
           $("#title").focus();
+        }
+        function impliedLoanRate(initial, monthly, residual, startDate, endDate) {
+          if (!(initial > 0) || !(monthly > 0) || !startDate || !endDate) return null;
+          const start = new Date(`${startDate}T00:00:00`);
+          const end = new Date(`${endDate}T00:00:00`);
+          const months = (end.getFullYear() - start.getFullYear()) * 12 + end.getMonth() - start.getMonth();
+          if (!(months > 0)) return null;
+          const total = monthly * months + residual;
+          if (total < initial) return null;
+          // Waarde van de betalingen bij maandrente i, gelijkgesteld aan het geleende bedrag.
+          const presentValue = (i) => i === 0 ? total : monthly * (1 - (1 + i) ** -months) / i + residual * (1 + i) ** -months;
+          let low = 0;
+          let high = 1;
+          if (presentValue(0) - initial <= 0) return 0;
+          for (let step = 0; step < 100; step++) {
+            const mid = (low + high) / 2;
+            if (presentValue(mid) > initial) low = mid; else high = mid;
+          }
+          return Math.round(((1 + low) ** 12 - 1) * 100000) / 1000;
+        }
+        function updateSuggestedRate() {
+          const rateInput = $("#rate");
+          if (!rateInput || !$("#monthlyPayment")) return;
+          const hint = $("#rate-hint");
+          const suggested = impliedLoanRate(Number($("#initialAmount").value), Number($("#monthlyPayment").value), Number($("#residual").value || 0), $("#startDate").value, $("#date").value);
+          if (rateInput.value === "" || rateInput.dataset.auto === "1") {
+            if (suggested === null) {
+              rateInput.value = "";
+              delete rateInput.dataset.auto;
+              hint.textContent = "";
+            } else {
+              rateInput.value = String(suggested);
+              rateInput.dataset.auto = "1";
+              hint.textContent = "Voorgesteld op basis van begindatum, einddatum, initieel bedrag, maandbedrag en restbedrag. Je kunt dit aanpassen.";
+            }
+          } else {
+            hint.textContent = suggested === null ? "" : `Berekende rente: ${suggested.toLocaleString("nl-NL", { maximumFractionDigits: 3 })}%`;
+          }
         }
         function openTransferModal(entry) {
           activeEditId = null;
@@ -2328,6 +2402,11 @@
             showToast("Import mislukt. Probeer het opnieuw.");
           }
         });
+        $("#form-fields").addEventListener("input", (event) => {
+          if (currentView !== "loans" || activeTransferId) return;
+          if (event.target.id === "rate") delete event.target.dataset.auto;
+          else updateSuggestedRate();
+        });
         $("#close-modal").addEventListener("click", closeModal);
         $("#cancel-modal").addEventListener("click", closeModal);
         $("#modal-backdrop").addEventListener("click", (event) => { if (event.target === $("#modal-backdrop")) closeModal(); });
@@ -2358,7 +2437,17 @@
             note: String(form.get("note") || "").trim(),
           };
           const rateValue = form.get("rate");
-          if (rateValue !== null && rateValue !== "") entry.rate = Number(rateValue);
+          if (rateValue !== null && rateValue !== "") entry.rate = Math.round(Number(rateValue) * 1000) / 1000;
+          if (currentView === "loans") {
+            const startDate = String(form.get("startDate") || "");
+            if (startDate) entry.startDate = startDate;
+            else delete entry.startDate;
+            for (const key of ["monthlyPayment", "residual", "initialAmount"]) {
+              const value = form.get(key);
+              if (value !== null && value !== "" && Number.isFinite(Number(value)) && Number(value) >= 0) entry[key] = Number(value);
+              else delete entry[key];
+            }
+          }
           if (previous >= 0) data[currentView][previous] = entry;
           else data[currentView].push(entry);
           data.demo = false;
