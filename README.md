@@ -2,6 +2,8 @@
 
 Bekijk de [gepubliceerde versie](https://betyre.alwaysdata.net/finlit/) of bezoek de [GitHub-repository](https://github.com/hanscappelle/finlit) voor de broncode en feedback.
 
+![Finlit-demo](<assets/Screenshot 2026-11-17 at 19.34.44.png>)
+
 Start het lokale dashboard vanuit deze projectmap:
 
 ```sh
