@@ -1,5 +1,7 @@
 # Finlit
 
+Bekijk de [gepubliceerde versie](https://betyre.alwaysdata.net/finlit/) of bezoek de [GitHub-repository](https://github.com/hanscappelle/finlit) voor de broncode en feedback.
+
 Start het lokale dashboard vanuit deze projectmap:
 
 ```sh
