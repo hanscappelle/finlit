@@ -573,7 +573,7 @@
             <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
           </button>
           <button class="button-secondary" id="backup-button" type="button" title="Download een gedateerde back-up van je gegevens">Backup maken</button>
-          <button class="button-secondary" id="open-file-button" type="button" title="Open een JSON-projectbestand">Bestand openen</button>
+          <button class="button-secondary" id="open-file-button" type="button" title="Open een JSON-projectbestand">Project openen</button>
           <div class="avatar" aria-label="Persoonlijk overzicht">JD</div>
         </header>
         <div class="content">
@@ -582,7 +582,7 @@
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
             </button>
             <strong id="data-disclaimer-title">Let op: je gegevens staan alleen in de browser</strong>
-            <p>Je gegevens worden lokaal op dit apparaat bewaard, niet op een server. Als je browsergegevens of websitegegevens wist, kunnen ze verloren gaan. Download regelmatig een JSON-back-up met <b>Backup maken</b> bovenaan en bewaar het bestand zelf. Gegevens terugzetten? Klik op <b>Bestand openen</b> naast de back-upknop en kies je JSON-bestand.</p>
+            <p>Je gegevens worden enkel lokaal op dit apparaat bewaard, niet op een server. Als je browsergegevens of websitegegevens wist, kunnen ze verloren gaan. Download regelmatig een JSON-back-up met <b>Backup maken</b> bovenaan en bewaar het bestand zelf. Gegevens terugzetten? Klik op <b>Project openen</b> naast de back-upknop en kies je JSON-bestand.</p>
           </aside>
           <div class="heading-row">
             <div>
@@ -599,7 +599,7 @@
                 <option value="two-years-ago">2 jaar geleden</option>
                 <option value="all" selected>Alles</option>
               </select>
-              <button class="button-secondary import-button" id="import-button" type="button" title="Kies een map met Belfius-afschriften (PDF)">
+              <button class="button-secondary import-button" id="import-button" type="button" title="Kies een map met afschriften (PDF)">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 0L7.5 7.5M12 3l4.5 4.5"/><path d="M4 13v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/></svg>
                 <span>Afschriften importeren</span>
               </button>
@@ -756,7 +756,7 @@
       </section>
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <input id="statement-picker" type="file" accept=".pdf,application/pdf" webkitdirectory directory multiple hidden aria-label="Kies een map met Belfius-afschriften" />
+    <input id="statement-picker" type="file" accept=".pdf,application/pdf" webkitdirectory directory multiple hidden aria-label="Kies een map met afschriften" />
     <input id="project-file-picker" type="file" accept=".json,application/json" hidden aria-label="Kies een Finlit JSON-projectbestand" />
 
     <script src="./vendor/pdfjs.bundle.js"></script>
@@ -1447,7 +1447,7 @@
               ? `${importedEntries.length} transacties geïmporteerd.`
               : recognizedFiles
                 ? `${duplicateCount} dubbele transacties overgeslagen.`
-                : "Geen Belfius-afschriften geïmporteerd.");
+                : "Geen afschriften geïmporteerd.");
           } finally {
             importButton.disabled = false;
             importButton.querySelector("span").textContent = "Afschriften importeren";
@@ -2473,7 +2473,7 @@
           try {
             await importStatements(files);
           } catch (error) {
-            console.error("De Belfius-import is onverwacht mislukt.", error);
+            console.error("De import is onverwacht mislukt.", error);
             setImportNotice("Import mislukt. Er zijn geen nieuwe gegevens opgeslagen; probeer het opnieuw.");
             showToast("Import mislukt. Probeer het opnieuw.");
           }
