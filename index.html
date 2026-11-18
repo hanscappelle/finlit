@@ -108,9 +108,10 @@
       .status-dot.offline { background: #bb6b55; box-shadow: 0 0 0 3px #f7eae6; }
       .avatar { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid #e6e9e5; border-radius: 50%; color: #4a665a; background: #edf2ed; font-size: 11px; font-weight: 700; }
       .content { width: min(1120px, 100%); margin: 0 auto; padding: 39px 5.2% 55px; }
-      .data-disclaimer { margin: 0 0 25px; padding: 14px 16px; border: 1px solid #ead8b5; border-radius: 8px; color: #675332; background: #fbf5e9; font-size: 12px; line-height: 1.55; }
+      .data-disclaimer { position: relative; margin: 0 0 25px; padding: 14px 52px 14px 16px; border: 1px solid #ead8b5; border-radius: 8px; color: #675332; background: #fbf5e9; font-size: 12px; line-height: 1.55; }
       .data-disclaimer strong { display: block; margin-bottom: 3px; color: #59451f; font-size: 13px; }
       .data-disclaimer p { margin: 0; }
+      .data-disclaimer .close-button { position: absolute; top: 8px; right: 8px; }
       .heading-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 27px; }
       .eyebrow { margin: 0 0 8px; color: #87918b; font-size: 10px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; }
       h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(29px, 3.2vw, 37px); font-weight: 500; letter-spacing: -.8px; }
@@ -576,7 +577,10 @@
           <div class="avatar" aria-label="Persoonlijk overzicht">JD</div>
         </header>
         <div class="content">
-          <aside class="data-disclaimer" role="note" aria-labelledby="data-disclaimer-title">
+          <aside class="data-disclaimer" id="data-disclaimer" role="note" aria-labelledby="data-disclaimer-title">
+            <button class="close-button" id="close-data-disclaimer" type="button" aria-label="Melding sluiten" title="Melding sluiten">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+            </button>
             <strong id="data-disclaimer-title">Let op: je gegevens staan alleen in de browser</strong>
             <p>Je gegevens worden lokaal op dit apparaat bewaard, niet op een server. Als je browsergegevens of websitegegevens wist, kunnen ze verloren gaan. Download regelmatig een JSON-back-up met <b>Backup maken</b> bovenaan en bewaar het bestand zelf. Gegevens terugzetten? Klik op <b>Bestand openen</b> naast de back-upknop en kies je JSON-bestand.</p>
           </aside>
@@ -760,6 +764,7 @@
       (() => {
         const STORAGE_KEY = "saldo-finance-v1";
         const THEME_STORAGE_KEY = "finlit-theme-v1";
+        const DATA_DISCLAIMER_STORAGE_KEY = "finlit-data-disclaimer-dismissed-v1";
         const DATABASE_NAME = "finlit";
         const DATABASE_VERSION = 1;
         const DATABASE_STORE = "projects";
@@ -832,6 +837,11 @@
             }
           }
         };
+        try {
+          $("#data-disclaimer").hidden = localStorage.getItem(DATA_DISCLAIMER_STORAGE_KEY) === "true";
+        } catch (error) {
+          console.error("De voorkeur voor de gegevensmelding kon niet worden gelezen.", error);
+        }
         let isDarkTheme = false;
         try {
           isDarkTheme = localStorage.getItem(THEME_STORAGE_KEY) === "dark";
@@ -1100,6 +1110,17 @@
           toast.classList.add("visible");
           clearTimeout(toastTimer);
           toastTimer = setTimeout(() => toast.classList.remove("visible"), 2600);
+        }
+        function setDataDisclaimerDismissed(dismissed) {
+          $("#data-disclaimer").hidden = dismissed;
+          try {
+            if (dismissed) localStorage.setItem(DATA_DISCLAIMER_STORAGE_KEY, "true");
+            else localStorage.removeItem(DATA_DISCLAIMER_STORAGE_KEY);
+            return true;
+          } catch (error) {
+            console.error("De voorkeur voor de gegevensmelding kon niet worden opgeslagen.", error);
+            return false;
+          }
         }
         const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
         const parseTags = (value) => {
@@ -2575,6 +2596,11 @@
           }
           showToast("Voorbeelddata gewist. Je kunt je eigen gegevens toevoegen.");
         });
+        $("#close-data-disclaimer").addEventListener("click", () => {
+          if (!setDataDisclaimerDismissed(true)) {
+            showToast("Melding gesloten, maar de voorkeur kon niet worden opgeslagen.");
+          }
+        });
         $("#open-file-button").addEventListener("click", () => $("#project-file-picker").click());
         $("#project-file-picker").addEventListener("change", async (event) => {
           const picker = event.currentTarget;
@@ -2607,8 +2633,9 @@
             $("#task-goal-filter").value = "";
             $("#note-goal-filter").value = "";
             document.querySelectorAll(".planning-form").forEach(resetPlanningForm);
+            const disclaimerPreferenceReset = setDataDisclaimerDismissed(false);
             updatePage();
-            showToast(`Projectbestand geladen. Vorige gegevens veiliggesteld in ${backupFileName}.`);
+            showToast(`Projectbestand geladen. Vorige gegevens veiliggesteld in ${backupFileName}.${disclaimerPreferenceReset ? "" : " De melding verschijnt nu, maar deze wijziging kon niet worden opgeslagen."}`);
           } catch (error) {
             console.error("Ander projectbestand kon niet worden geladen.", error);
             showToast(error instanceof SyntaxError
